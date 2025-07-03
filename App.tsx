@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import Tts from 'react-native-tts';
 import Voice from '@react-native-voice/voice';
 import { fetchQuestions, Question } from './apiRequest';
+import Animated, { CurvedTransition } from 'react-native-reanimated';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +18,17 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
+  const [initialParams, setInitialParams] = useState(null);
+  const [messages, setMessages] = useState([
+    {
+      role: 'system',
+      message: 'Welcome to the Sage App! How can I assist you today?',
+    },
+    {
+      role: 'user',
+      message: 'Avinash Rathod',
+    },
+  ]);
 
   useEffect(() => {
     // Initialize TTS
@@ -112,31 +124,67 @@ function App() {
   };
   const fetchQuestionList = () => {
     setIsLoading(true);
-
-    fetchQuestions(
-      (questions: Question[]) => {
-        setIsLoading(false);
-        Alert.alert(
-          'API Success',
-          `Fetched ${questions.length} questions successfully!`,
-        );
-        console.log('Questions:', questions);
-      },
-      (error: string) => {
-        setIsLoading(false);
-        Alert.alert('API Error', error);
-        console.error('API Error:', error);
-      },
-    );
+    const onSuccess = res => {
+      setIsLoading(false);
+      console.log('Questions:', res.data);
+      setInitialParams({
+        ...res.data?.question,
+        user_data: res.data?.user_data,
+      });
+      if (res.data?.question_intro) {
+        // Tts.speak(res.data?.question_intro);
+        setMessages([
+          {
+            role: 'system',
+            message: res.data?.question_intro,
+          },
+        ]);
+      }
+      if (res.data?.question?.question) {
+        // Tts.speak(res.data?.question?.question);
+        setMessages(prev => [
+          ...prev,
+          { role: 'system', message: res.data?.question?.question },
+        ]);
+      }
+    };
+    fetchQuestions(onSuccess, () => setIsLoading(false));
   };
   useEffect(() => {
-    fetchQuestionList();
-
+    // fetchQuestionList();
     return () => {};
   }, []);
 
   return (
     <View style={styles.container}>
+      <Animated.FlatList
+        data={messages}
+        style={{ height: '80%' }}
+        keyExtractor={(item, index) => `message-${index}`}
+        renderItem={({ item }) => {
+          const isSystem = item.role === 'system';
+          return (
+            <View
+              style={[styles.bubbleContainer, isSystem && styles.systemBubble]}
+            >
+              <View
+                style={[
+                  styles.bubble,
+                  !isSystem && { backgroundColor: '#bae8e0' },
+                ]}
+              >
+                <Animated.Text
+                  layout={CurvedTransition}
+                  style={{ fontSize: 16, color: '#333' }}
+                >
+                  {item.message}
+                </Animated.Text>
+              </View>
+            </View>
+          );
+        }}
+        layout={CurvedTransition}
+      />
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={[styles.button, styles.ttsButton]}
@@ -167,6 +215,30 @@ function App() {
 }
 
 const styles = StyleSheet.create({
+  bubbleContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'flex-end',
+  },
+  bubble: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+    marginHorizontal: 20,
+    maxWidth: '70%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  systemBubble: {
+    justifyContent: 'flex-start',
+  },
   container: {
     justifyContent: 'space-between',
     flex: 1,
