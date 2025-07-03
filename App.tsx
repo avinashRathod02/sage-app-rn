@@ -1,34 +1,25 @@
-import {
-  StyleSheet,
-  useColorScheme,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Tts from 'react-native-tts';
 import Voice from '@react-native-voice/voice';
-import { fetchQuestions, Question } from './apiRequest';
-import Animated, { CurvedTransition } from 'react-native-reanimated';
+import { Request } from './apiRequest';
+import Animated, {
+  CurvedTransition,
+  FadeInLeft,
+  FadeInRight,
+} from 'react-native-reanimated';
 
 function App() {
+  const [conversationId, setConversationId] = useState(
+    `CON${new Date().getTime()}`,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [buttonPressed, setButtonPressed] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
   const [initialParams, setInitialParams] = useState(null);
-  const [messages, setMessages] = useState([
-    {
-      role: 'system',
-      message: 'Welcome to the Sage App! How can I assist you today?',
-    },
-    {
-      role: 'user',
-      message: 'Avinash Rathod',
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     // Initialize TTS
@@ -67,6 +58,7 @@ function App() {
       if (event.value && event.value.length > 0) {
         setRecognizedText(event.value[0]);
         setButtonPressed(`Recognized: "${event.value[0]}"`);
+        submitAnswer(event.value[0]);
       }
     };
 
@@ -99,7 +91,6 @@ function App() {
         await Tts.speak(`Hy How are you`);
       }
     } catch (error) {
-      console.error('TTS Error:', error);
       Alert.alert('Error', 'Text-to-Speech failed. Please try again.');
       setIsSpeaking(false);
     }
@@ -122,6 +113,42 @@ function App() {
       setIsListening(false);
     }
   };
+  function getPrompt(prompt, question, answer) {
+    return prompt.replace('{question}', question).replace('{answer}', answer);
+  }
+  const submitAnswer = (answer: string) => {
+    setMessages(prev => [...prev, { role: 'user', message: answer }]);
+    if (!initialParams) return;
+    const prompt = getPrompt(
+      initialParams.question_prompt,
+      initialParams.question,
+      answer,
+    );
+    const params = {
+      ...initialParams,
+      conversation_id: conversationId,
+      response: answer,
+      prompt,
+      is_third_try: false,
+    };
+    console.log('Submitting answer:', params);
+
+    const onSuccess = res => {
+      if (res.data.valid_answer) {
+        setInitialParams({
+          ...res.data?.next_question_data,
+          user_data: res.data?.user_data,
+        });
+        const newQuestion = res.data?.next_question_data?.question;
+        setMessages(prev => [
+          ...prev,
+          { role: 'system', message: newQuestion },
+        ]);
+        Tts.speak(newQuestion);
+      }
+    };
+    Request('call-openai', 'POST', params, onSuccess, () => {});
+  };
   const fetchQuestionList = () => {
     setIsLoading(true);
     const onSuccess = res => {
@@ -141,17 +168,19 @@ function App() {
         ]);
       }
       if (res.data?.question?.question) {
-        // Tts.speak(res.data?.question?.question);
-        setMessages(prev => [
-          ...prev,
-          { role: 'system', message: res.data?.question?.question },
-        ]);
+        setTimeout(() => {
+          Tts.speak(res.data?.question?.question);
+          setMessages(prev => [
+            ...prev,
+            { role: 'system', message: res.data?.question?.question },
+          ]);
+        }, 2000);
       }
     };
-    fetchQuestions(onSuccess, () => setIsLoading(false));
+    Request('questions', 'GET', {}, onSuccess, () => setIsLoading(false));
   };
   useEffect(() => {
-    // fetchQuestionList();
+    fetchQuestionList();
     return () => {};
   }, []);
 
@@ -167,7 +196,8 @@ function App() {
             <View
               style={[styles.bubbleContainer, isSystem && styles.systemBubble]}
             >
-              <View
+              <Animated.View
+                entering={isSystem ? FadeInLeft : FadeInRight}
                 style={[
                   styles.bubble,
                   !isSystem && { backgroundColor: '#bae8e0' },
@@ -179,11 +209,11 @@ function App() {
                 >
                   {item.message}
                 </Animated.Text>
-              </View>
+              </Animated.View>
             </View>
           );
         }}
-        layout={CurvedTransition}
+        itemLayoutAnimation={CurvedTransition}
       />
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
@@ -203,7 +233,7 @@ function App() {
           onPress={handleSpeechToText}
         >
           <Text style={styles.buttonText}>
-            {isListening ? 'Stop Listening' : 'Speech to Text'}
+            {isListening ? 'Stop Listening' : 'Give Answer'}
           </Text>
           <Text style={styles.buttonSubText}>
             {isListening ? 'Listening...' : 'Tap to start recording'}

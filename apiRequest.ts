@@ -2,8 +2,8 @@
  * API Request utilities for the questions endpoint
  */
 
-const BASE_URL = 'http://52.66.70.151:3000';
-const QUESTIONS_ENDPOINT = '/poc/v1/questions';
+const BASE_URL = 'http://52.66.70.151:3000/poc/v1/';
+const QUESTIONS_ENDPOINT = 'questions';
 
 export interface Question {
   id?: string;
@@ -26,28 +26,31 @@ export interface ApiResponse<T> {
  * @param onSuccess - Callback function called with the questions data when request succeeds
  * @param onError - Callback function called when request fails
  */
-export const fetchQuestions = async (
+export const Request = async (
+  endpoint = '',
+  method = 'GET',
+  data = {},
   onSuccess: (questions: Question[]) => void,
   onError: (error: string) => void,
 ): Promise<void> => {
   try {
-    const response = await fetch(`${BASE_URL}${QUESTIONS_ENDPOINT}`, {
-      method: 'GET',
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      body: method === 'POST' ? JSON.stringify(data) : undefined,
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const res = await response.json();
 
-    onSuccess(data);
+    onSuccess(res);
   } catch (error) {
-    console.error('API Error:', error);
     onError(
       error instanceof Error ? error.message : 'Failed to fetch questions',
     );
