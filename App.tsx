@@ -1,12 +1,4 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import {
-  StatusBar,
   StyleSheet,
   useColorScheme,
   View,
@@ -14,65 +6,111 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import React, { useState } from 'react';
-import { textToSpeech, speechToText } from './speechUtils';
+import React, { useState, useEffect } from 'react';
+import Tts from 'react-native-tts';
+import Voice from '@react-native-voice/voice';
 import { fetchQuestions, Question } from './apiRequest';
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [buttonPressed, setButtonPressed] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognizedText, setRecognizedText] = useState('');
 
-  const handleStart = () => {
-    setIsLoading(true);
+  useEffect(() => {
+    // Initialize TTS
+    Tts.setDefaultLanguage('en-US');
+    Tts.engines().then(voices => {
+      console.log('Available voices:', voices);
+    });
 
-    // First fetch questions from API
-    fetchQuestions(
-      (questions: Question[]) => {
-        setIsLoading(false);
-        if (questions.length > 0) {
-          const question = questions[0];
-          setCurrentQuestion(question);
+    // Tts.setDefaultRate(0.5);
+    Tts.setDefaultPitch(1.0);
 
-          // Speak the question
-          textToSpeech(
-            question.question || 'No question available',
-            () => {
-              console.log('Question spoken, now listening for answer...');
+    // Set up TTS event listeners
+    Tts.addEventListener('tts-start', () => {
+      setIsSpeaking(true);
+    });
 
-              // Listen for the answer
-              speechToText(
-                (recognizedText: string) => {
-                  console.log('User answered:', recognizedText);
-                  Alert.alert(
-                    'Answer Recorded',
-                    `You said: "${recognizedText}"`,
-                  );
-                },
-                (error: any) => {
-                  console.error('Speech recognition failed:', error);
-                  Alert.alert('Error', 'Failed to recognize speech');
-                },
-              );
-            },
-            (error: any) => {
-              console.error('TTS failed:', error);
-              Alert.alert('Error', 'Failed to speak question');
-            },
-          );
-        } else {
-          Alert.alert('No Questions', 'No questions available from the API');
-        }
-      },
-      (error: string) => {
-        setIsLoading(false);
-        console.error('API Error:', error);
-        Alert.alert('API Error', `Failed to fetch questions: ${error}`);
-      },
-    );
+    Tts.addEventListener('tts-finish', () => {
+      setIsSpeaking(false);
+    });
+
+    Tts.addEventListener('tts-cancel', () => {
+      setIsSpeaking(false);
+    });
+
+    // Set up Voice event listeners
+    Voice.onSpeechStart = () => {
+      setIsListening(true);
+      setButtonPressed('Listening...');
+    };
+
+    Voice.onSpeechEnd = () => {
+      setIsListening(false);
+    };
+
+    Voice.onSpeechResults = event => {
+      if (event.value && event.value.length > 0) {
+        setRecognizedText(event.value[0]);
+        setButtonPressed(`Recognized: "${event.value[0]}"`);
+      }
+    };
+
+    Voice.onSpeechError = error => {
+      console.error('Speech recognition error:', error);
+      setIsListening(false);
+      setButtonPressed('Speech recognition failed');
+      Alert.alert('Error', 'Speech recognition failed. Please try again.');
+    };
+
+    return () => {
+      // Clean up TTS event listeners
+      Tts.removeAllListeners('tts-start');
+      Tts.removeAllListeners('tts-finish');
+      Tts.removeAllListeners('tts-cancel');
+
+      // Clean up Voice
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);
+
+  const handleTextToSpeech = async () => {
+    try {
+      if (isSpeaking) {
+        await Tts.stop();
+        setIsSpeaking(false);
+        setButtonPressed('Speech stopped');
+      } else {
+        setButtonPressed('Speaking: "Hello how are you"');
+        await Tts.speak(`Hy How are you`);
+      }
+    } catch (error) {
+      console.error('TTS Error:', error);
+      Alert.alert('Error', 'Text-to-Speech failed. Please try again.');
+      setIsSpeaking(false);
+    }
   };
 
-  const handleTestAPI = () => {
+  const handleSpeechToText = async () => {
+    try {
+      if (isListening) {
+        await Voice.stop();
+        setIsListening(false);
+        setButtonPressed('Stopped listening');
+      } else {
+        setRecognizedText('');
+        setButtonPressed('Starting to listen...');
+        await Voice.start('en-US');
+      }
+    } catch (error) {
+      console.error('Voice start error:', error);
+      Alert.alert('Error', 'Failed to start speech recognition');
+      setIsListening(false);
+    }
+  };
+  const fetchQuestionList = () => {
     setIsLoading(true);
 
     fetchQuestions(
@@ -91,41 +129,36 @@ function App() {
       },
     );
   };
+  useEffect(() => {
+    fetchQuestionList();
+
+    return () => {};
+  }, []);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-
-      <View style={styles.centerContainer}>
-        <Text style={styles.title}>Speech + API Demo App</Text>
-        <Text style={styles.subtitle}>
-          Fetch questions from API and interact with speech
-        </Text>
-
-        {currentQuestion && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionLabel}>Current Question:</Text>
-            <Text style={styles.questionText}>{currentQuestion.question}</Text>
-          </View>
-        )}
-
+      <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={[styles.startButton, isLoading && styles.disabledButton]}
-          onPress={handleStart}
-          disabled={isLoading}
+          style={[styles.button, styles.ttsButton]}
+          onPress={handleTextToSpeech}
         >
-          <Text style={styles.startButtonText}>
-            {isLoading ? 'Loading...' : 'Start Question Demo'}
+          <Text style={styles.buttonText}>
+            {isSpeaking ? 'Stop Speaking' : 'Text to Speech'}
+          </Text>
+          <Text style={styles.buttonSubText}>
+            {isSpeaking ? 'Speaking...' : 'Say "Hello how are you"'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.testButton, isLoading && styles.disabledButton]}
-          onPress={handleTestAPI}
-          disabled={isLoading}
+          style={[styles.button, styles.sttButton]}
+          onPress={handleSpeechToText}
         >
-          <Text style={styles.testButtonText}>
-            {isLoading ? 'Loading...' : 'Test API Connection'}
+          <Text style={styles.buttonText}>
+            {isListening ? 'Stop Listening' : 'Speech to Text'}
+          </Text>
+          <Text style={styles.buttonSubText}>
+            {isListening ? 'Listening...' : 'Tap to start recording'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -135,67 +168,22 @@ function App() {
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'space-between',
     flex: 1,
+    paddingTop: 50,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  buttonsContainer: {
     padding: 20,
+    alignItems: 'center',
+    gap: 15,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  questionContainer: {
-    backgroundColor: '#F0F8FF',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    width: '100%',
-  },
-  questionLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007AFF',
-    marginBottom: 5,
-  },
-  questionText: {
-    fontSize: 14,
-    color: '#333333',
-    lineHeight: 20,
-  },
-  startButton: {
+  button: {
     backgroundColor: '#007AFF',
     paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  testButton: {
-    backgroundColor: '#34C759',
-    paddingVertical: 12,
     paddingHorizontal: 30,
-    borderRadius: 8,
+    borderRadius: 10,
+    minWidth: 200,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -205,18 +193,22 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  disabledButton: {
-    opacity: 0.6,
+  ttsButton: {
+    backgroundColor: '#34C759',
   },
-  startButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  sttButton: {
+    backgroundColor: '#FF3B30',
   },
-  testButtonText: {
+  buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  buttonSubText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    opacity: 0.8,
   },
 });
 

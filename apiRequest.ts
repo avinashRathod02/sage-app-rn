@@ -45,16 +45,7 @@ export const fetchQuestions = async (
 
     const data = await response.json();
 
-    // Handle different response structures
-    if (Array.isArray(data)) {
-      onSuccess(data);
-    } else if (data.success && data.data) {
-      onSuccess(data.data);
-    } else if (data.questions) {
-      onSuccess(data.questions);
-    } else {
-      onSuccess([data]); // Single question object
-    }
+    onSuccess(data);
   } catch (error) {
     console.error('API Error:', error);
     onError(
