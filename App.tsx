@@ -8,6 +8,10 @@ import Animated, {
   FadeInLeft,
   FadeInRight,
 } from 'react-native-reanimated';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs(['Warning: ...']);
+LogBox.ignoreAllLogs();
 
 function App() {
   const [conversationId, setConversationId] = useState(
@@ -117,7 +121,6 @@ function App() {
     return prompt.replace('{question}', question).replace('{answer}', answer);
   }
   const submitAnswer = (answer: string) => {
-    setMessages(prev => [...prev, { role: 'user', message: answer }]);
     if (!initialParams) return;
     const prompt = getPrompt(
       initialParams.question_prompt,
@@ -131,10 +134,13 @@ function App() {
       prompt,
       is_third_try: false,
     };
+    setMessages(prev => [...prev, { role: 'user', message: answer }]);
     console.log('Submitting answer:', params);
 
     const onSuccess = res => {
       if (res.data.valid_answer) {
+        console.log('Valid answer received:', res.data);
+
         setInitialParams({
           ...res.data?.next_question_data,
           user_data: res.data?.user_data,
@@ -145,10 +151,25 @@ function App() {
           { role: 'system', message: newQuestion },
         ]);
         Tts.speak(newQuestion);
+      } else {
+        setInitialParams((v = {}) => ({
+          ...v,
+          user_data: res?.data?.user_data,
+        }));
+        setMessages(prev => [
+          ...prev,
+          { role: 'system', message: res.data?.explanation },
+        ]);
+        Tts.speak(res.data?.explanation);
       }
     };
-    Request('call-openai', 'POST', params, onSuccess, () => {});
+    Request('call-openai', 'POST', params, onSuccess, e => {
+      console.log('Error:', e);
+      setIsLoading(false);
+    });
   };
+  console.log('initialParams:', initialParams);
+
   const fetchQuestionList = () => {
     setIsLoading(true);
     const onSuccess = res => {
