@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Tts from 'react-native-tts';
 import Voice from '@react-native-voice/voice';
 import { Request } from './apiRequest';
@@ -21,7 +21,7 @@ interface Message {
 }
 
 function App() {
-  const { initialParams, setInitialParams, updateInitialParams } =
+  const { initialParams, setInitialParams, userData, setUserData } =
     useAppStore();
   const [conversationId, setConversationId] = useState(
     `CON${new Date().getTime()}`,
@@ -32,6 +32,9 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  
+  // Create a ref to store the latest submit function
+  const submitAnswerRef = useRef<((answer: string) => void) | null>(null);
 
   useEffect(() => {
     // Initialize TTS
@@ -70,7 +73,10 @@ function App() {
       if (event.value && event.value.length > 0) {
         setRecognizedText(event.value[0]);
         setButtonPressed(`Recognized: "${event.value[0]}"`);
-        submitAnswer(event.value[0]);
+        // Use the ref to call the latest submit function
+        if (submitAnswerRef.current) {
+          submitAnswerRef.current(event.value[0]);
+        }
       }
     };
 
@@ -128,53 +134,59 @@ function App() {
   function getPrompt(prompt, question, answer) {
     return prompt.replace('{question}', question).replace('{answer}', answer);
   }
-  const submitAnswer = (answer: string) => {
-    if (!initialParams) return;
-    const prompt = getPrompt(
-      initialParams.question_prompt,
-      initialParams.question,
-      answer,
-    );
-    const params = {
-      ...initialParams,
-      conversation_id: conversationId,
-      response: answer,
-      prompt,
-      is_third_try: false,
-    };
-    setMessages(prev => [...prev, { role: 'user', message: answer }]);
-    console.log('Submitting answer:', params);
+  const submitAnswer = useCallback(
+    (answer: string) => {
+      if (!initialParams) return;
+      const prompt = getPrompt(
+        initialParams.question_prompt,
+        initialParams.question,
+        answer,
+      );
+      const params = {
+        ...initialParams,
+        user_data: userData,
+        conversation_id: conversationId,
+        response: answer,
+        prompt,
+        is_third_try: 0,
+      };
+      setMessages(prev => [...prev, { role: 'user', message: answer }]);
+      console.log('Submitting answer :', params, initialParams);
 
-    const onSuccess = res => {
-      if (res.data.valid_answer) {
-        console.log('Valid answer received:', res.data);
+      const onSuccess = res => {
+        if (res.data.valid_answer) {
+          console.log('Valid answer received:', res.data);
 
-        setInitialParams({
-          ...res.data?.next_question_data,
-          user_data: res.data?.user_data,
-        });
-        const newQuestion = res.data?.next_question_data?.question;
-        setMessages(prev => [
-          ...prev,
-          { role: 'system', message: newQuestion },
-        ]);
-        Tts.speak(newQuestion);
-      } else {
-        updateInitialParams({
-          user_data: res?.data?.user_data,
-        });
-        setMessages(prev => [
-          ...prev,
-          { role: 'system', message: res.data?.explanation },
-        ]);
-        Tts.speak(res.data?.explanation);
-      }
-    };
-    Request('call-openai', 'POST', params, onSuccess, e => {
-      console.log('Error:', e);
-      setIsLoading(false);
-    });
-  };
+          setInitialParams(res.data?.next_question_data);
+
+          setUserData(res.data?.user_data);
+          const newQuestion = res.data?.next_question_data?.question;
+          setMessages(prev => [
+            ...prev,
+            { role: 'system', message: newQuestion },
+          ]);
+          Tts.speak(newQuestion);
+        } else {
+          setUserData(res?.data?.user_data);
+          setMessages(prev => [
+            ...prev,
+            { role: 'system', message: res.data?.explanation },
+          ]);
+          Tts.speak(res.data?.explanation);
+        }
+      };
+      Request('call-openai', 'POST', params, onSuccess, e => {
+        console.log('Error:', e);
+        setIsLoading(false);
+      });
+    },
+    [initialParams, userData, conversationId, setInitialParams, setUserData],
+  );
+  
+  // Update the ref whenever submitAnswer changes
+  useEffect(() => {
+    submitAnswerRef.current = submitAnswer;
+  }, [submitAnswer]);
   // Track store changes with Reactotron
   useEffect(() => {
     Reactotron.log('Store State Changed', { initialParams });
@@ -185,10 +197,8 @@ function App() {
     const onSuccess = res => {
       setIsLoading(false);
       console.log('Questions:', res.data);
-      setInitialParams({
-        ...res.data?.question,
-        user_data: res.data?.user_data,
-      });
+      setInitialParams(res.data?.question);
+      setUserData(res.data?.user_data);
       if (res.data?.question_intro) {
         // Tts.speak(res.data?.question_intro);
         setMessages([
