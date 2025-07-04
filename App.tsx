@@ -9,11 +9,20 @@ import Animated, {
   FadeInRight,
 } from 'react-native-reanimated';
 import { LogBox } from 'react-native';
+import { useAppStore } from './store/appStore';
+import Reactotron from 'reactotron-react-native';
 
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
 
+interface Message {
+  role: 'user' | 'system';
+  message: string;
+}
+
 function App() {
+  const { initialParams, setInitialParams, updateInitialParams } =
+    useAppStore();
   const [conversationId, setConversationId] = useState(
     `CON${new Date().getTime()}`,
   );
@@ -22,8 +31,7 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
-  const [initialParams, setInitialParams] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     // Initialize TTS
@@ -152,10 +160,9 @@ function App() {
         ]);
         Tts.speak(newQuestion);
       } else {
-        setInitialParams((v = {}) => ({
-          ...v,
+        updateInitialParams({
           user_data: res?.data?.user_data,
-        }));
+        });
         setMessages(prev => [
           ...prev,
           { role: 'system', message: res.data?.explanation },
@@ -168,7 +175,10 @@ function App() {
       setIsLoading(false);
     });
   };
-  console.log('initialParams:', initialParams);
+  // Track store changes with Reactotron
+  useEffect(() => {
+    Reactotron.log('Store State Changed', { initialParams });
+  }, [initialParams]);
 
   const fetchQuestionList = () => {
     setIsLoading(true);
