@@ -1,4 +1,13 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Button,
+  ScrollView,
+  FlatList,
+} from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Tts from 'react-native-tts';
 import Voice from '@react-native-voice/voice';
@@ -21,18 +30,29 @@ interface Message {
 }
 
 function App() {
-  const { initialParams, setInitialParams, userData, setUserData } =
-    useAppStore();
+  // scrollRef
+  const scrollRef = useRef<FlatList>(null);
+  const {
+    initialParams,
+    categories,
+    setCategories,
+    setInitialParams,
+    userData,
+    setUserData,
+  } = useAppStore();
+
   const [conversationId, setConversationId] = useState(
     `CON${new Date().getTime()}`,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [type, setType] = useState(1);
+  const [category, setCategory] = useState(0);
   const [buttonPressed, setButtonPressed] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  
+
   // Create a ref to store the latest submit function
   const submitAnswerRef = useRef<((answer: string) => void) | null>(null);
 
@@ -84,7 +104,6 @@ function App() {
       console.error('Speech recognition error:', error);
       setIsListening(false);
       setButtonPressed('Speech recognition failed');
-      Alert.alert('Error', 'Speech recognition failed. Please try again.');
     };
 
     return () => {
@@ -97,22 +116,6 @@ function App() {
       Voice.destroy().then(Voice.removeAllListeners);
     };
   }, []);
-
-  const handleTextToSpeech = async () => {
-    try {
-      if (isSpeaking) {
-        await Tts.stop();
-        setIsSpeaking(false);
-        setButtonPressed('Speech stopped');
-      } else {
-        setButtonPressed('Speaking: "Hello how are you"');
-        await Tts.speak(`Hy How are you`);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Text-to-Speech failed. Please try again.');
-      setIsSpeaking(false);
-    }
-  };
 
   const handleSpeechToText = async () => {
     try {
@@ -151,6 +154,7 @@ function App() {
         is_third_try: 0,
       };
       setMessages(prev => [...prev, { role: 'user', message: answer }]);
+      scrollRef?.current?.scrollToEnd({ animated: true });
       console.log('Submitting answer :', params, initialParams);
 
       const onSuccess = res => {
@@ -182,15 +186,12 @@ function App() {
     },
     [initialParams, userData, conversationId, setInitialParams, setUserData],
   );
-  
+
   // Update the ref whenever submitAnswer changes
   useEffect(() => {
     submitAnswerRef.current = submitAnswer;
   }, [submitAnswer]);
   // Track store changes with Reactotron
-  useEffect(() => {
-    Reactotron.log('Store State Changed', { initialParams });
-  }, [initialParams]);
 
   const fetchQuestionList = () => {
     setIsLoading(true);
@@ -220,55 +221,87 @@ function App() {
     };
     Request('questions', 'GET', {}, onSuccess, () => setIsLoading(false));
   };
+  const fetchCategories = () => {
+    const onSuccess = res => {
+      setCategories(res.data?.categoryList || []);
+    };
+    Request('metadata', 'GET', {}, onSuccess, () => {});
+  };
   useEffect(() => {
     fetchQuestionList();
+    fetchCategories();
     return () => {};
   }, []);
 
   return (
     <View style={styles.container}>
-      <Animated.FlatList
-        data={messages}
-        style={{ height: '80%' }}
-        keyExtractor={(item, index) => `message-${index}`}
-        renderItem={({ item }) => {
-          const isSystem = item.role === 'system';
-          return (
-            <View
-              style={[styles.bubbleContainer, isSystem && styles.systemBubble]}
-            >
-              <Animated.View
-                entering={isSystem ? FadeInLeft : FadeInRight}
+      <View style={styles.header}>
+        <Button onPress={() => setType(1)} title="View Conversation" />
+        <Button onPress={() => setType(2)} title="View Data" />
+      </View>
+      {type === 1 ? (
+        <Animated.FlatList
+          ref={scrollRef}
+          data={messages}
+          style={{ height: '80%' }}
+          keyExtractor={(item, index) => `message-${index}`}
+          renderItem={({ item }) => {
+            const isSystem = item.role === 'system';
+            return (
+              <View
                 style={[
-                  styles.bubble,
-                  !isSystem && { backgroundColor: '#bae8e0' },
+                  styles.bubbleContainer,
+                  isSystem && styles.systemBubble,
                 ]}
               >
-                <Animated.Text
-                  layout={CurvedTransition}
-                  style={{ fontSize: 16, color: '#333' }}
+                <Animated.View
+                  entering={isSystem ? FadeInLeft : FadeInRight}
+                  style={[
+                    styles.bubble,
+                    !isSystem && { backgroundColor: '#bae8e0' },
+                  ]}
                 >
-                  {item.message}
-                </Animated.Text>
-              </Animated.View>
-            </View>
-          );
-        }}
-        itemLayoutAnimation={CurvedTransition}
-      />
+                  <Animated.Text
+                    layout={CurvedTransition}
+                    style={{ fontSize: 16, color: '#333' }}
+                  >
+                    {item.message}
+                  </Animated.Text>
+                </Animated.View>
+              </View>
+            );
+          }}
+          itemLayoutAnimation={CurvedTransition}
+        />
+      ) : (
+        <ScrollView style={{ height: '80%' }}>
+          <ScrollView
+            horizontal
+            contentContainerStyle={{ flexDirection: 'row', padding: 10 }}
+          >
+            {categories?.map((item, index) => {
+              const isSelected = item.id === category;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={{
+                    backgroundColor: isSelected ? '#ffff99' : '#e0f7fa',
+                    padding: 10,
+                    borderRadius: 5,
+                    marginRight: 10,
+                  }}
+                  onPress={() => setCategory(item.id)}
+                >
+                  <Text style={{ fontSize: 16, color: '#333' }}>
+                    {item.category}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </ScrollView>
+      )}
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.ttsButton]}
-          onPress={handleTextToSpeech}
-        >
-          <Text style={styles.buttonText}>
-            {isSpeaking ? 'Stop Speaking' : 'Text to Speech'}
-          </Text>
-          <Text style={styles.buttonSubText}>
-            {isSpeaking ? 'Speaking...' : 'Say "Hello how are you"'}
-          </Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.button, styles.sttButton]}
           onPress={handleSpeechToText}
@@ -286,6 +319,16 @@ function App() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderWidth: 1,
+    margin: 10,
+    borderRadius: 10,
+    backgroundColor: '#f8f8f8',
+  },
   bubbleContainer: {
     flexDirection: 'row',
     width: '100%',
