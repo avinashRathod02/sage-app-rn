@@ -2,8 +2,9 @@
  * API Request utilities for the questions endpoint
  */
 
+import axios, { AxiosResponse, AxiosError } from 'axios';
+
 const BASE_URL = 'http://52.66.70.151:3000/poc/v1/';
-const QUESTIONS_ENDPOINT = 'questions';
 
 export interface Question {
   id?: string;
@@ -22,174 +23,46 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Fetch questions from the API
- * @param onSuccess - Callback function called with the questions data when request succeeds
+ * Make API requests using axios
+ * @param endpoint - API endpoint to call
+ * @param method - HTTP method (GET, POST, PUT, DELETE, etc.)
+ * @param data - Request body data for POST/PUT requests
+ * @param onSuccess - Callback function called when request succeeds
  * @param onError - Callback function called when request fails
  */
 export const Request = async (
   endpoint = '',
   method = 'GET',
   data = {},
-  onSuccess: (questions: Question[]) => void,
-  onError: (error: string) => void,
-): Promise<void> => {
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: method === 'POST' ? JSON.stringify(data) : undefined,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const res = await response.json();
-
-    onSuccess(res);
-  } catch (error) {
-    onError(
-      error instanceof Error ? error.message : 'Failed to fetch questions',
-    );
-  }
-};
-
-/**
- * Post a question to the API
- * @param question - The question data to send
- * @param onSuccess - Callback function called when request succeeds
- * @param onError - Callback function called when request fails
- */
-export const postQuestion = async (
-  question: Partial<Question>,
   onSuccess: (response: any) => void,
   onError: (error: string) => void,
 ): Promise<void> => {
   try {
-    const response = await fetch(`${BASE_URL}${QUESTIONS_ENDPOINT}`, {
-      method: 'POST',
+    const config = {
+      method: method.toLowerCase(),
+      url: `${BASE_URL}${endpoint}`,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(question),
-    });
+      ...(method.toLowerCase() !== 'get' && { data }),
+    };
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const response: AxiosResponse = await axios(config);
 
-    const data = await response.json();
-    onSuccess(data);
+    onSuccess(response.data);
   } catch (error) {
-    console.error('API Error:', error);
-    onError(error instanceof Error ? error.message : 'Failed to post question');
-  }
-};
-
-/**
- * Get a specific question by ID
- * @param id - The question ID
- * @param onSuccess - Callback function called with the question data when request succeeds
- * @param onError - Callback function called when request fails
- */
-export const getQuestionById = async (
-  id: string,
-  onSuccess: (question: Question) => void,
-  onError: (error: string) => void,
-): Promise<void> => {
-  try {
-    const response = await fetch(`${BASE_URL}${QUESTIONS_ENDPOINT}/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      const errorMessage =
+        (axiosError.response?.data as any)?.message ||
+        axiosError.message ||
+        'Failed to make API request';
+      onError(errorMessage);
+    } else {
+      onError(
+        error instanceof Error ? error.message : 'Unknown error occurred',
+      );
     }
-
-    const data = await response.json();
-    onSuccess(data);
-  } catch (error) {
-    console.error('API Error:', error);
-    onError(
-      error instanceof Error ? error.message : 'Failed to fetch question',
-    );
-  }
-};
-
-/**
- * Update a question by ID
- * @param id - The question ID
- * @param updates - The updates to apply
- * @param onSuccess - Callback function called when request succeeds
- * @param onError - Callback function called when request fails
- */
-export const updateQuestion = async (
-  id: string,
-  updates: Partial<Question>,
-  onSuccess: (response: any) => void,
-  onError: (error: string) => void,
-): Promise<void> => {
-  try {
-    const response = await fetch(`${BASE_URL}${QUESTIONS_ENDPOINT}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    onSuccess(data);
-  } catch (error) {
-    console.error('API Error:', error);
-    onError(
-      error instanceof Error ? error.message : 'Failed to update question',
-    );
-  }
-};
-
-/**
- * Delete a question by ID
- * @param id - The question ID
- * @param onSuccess - Callback function called when request succeeds
- * @param onError - Callback function called when request fails
- */
-export const deleteQuestion = async (
-  id: string,
-  onSuccess: () => void,
-  onError: (error: string) => void,
-): Promise<void> => {
-  try {
-    const response = await fetch(`${BASE_URL}${QUESTIONS_ENDPOINT}/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    onSuccess();
-  } catch (error) {
-    console.error('API Error:', error);
-    onError(
-      error instanceof Error ? error.message : 'Failed to delete question',
-    );
   }
 };

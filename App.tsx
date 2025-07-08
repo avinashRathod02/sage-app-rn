@@ -20,6 +20,7 @@ import Animated, {
 import { LogBox } from 'react-native';
 import { useAppStore } from './store/appStore';
 import Reactotron from 'reactotron-react-native';
+import { Conversation } from './store/screens/conversation';
 
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
@@ -41,9 +42,8 @@ function App() {
     setUserData,
   } = useAppStore();
 
-  const [conversationId, setConversationId] = useState(
-    `CON${new Date().getTime()}`,
-  );
+  const [conversationId, setConversationId] = useState(`CON1751881500.379857`);
+  const [conversation, setConversation] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState(1);
   const [category, setCategory] = useState(0);
@@ -53,20 +53,13 @@ function App() {
   const [recognizedText, setRecognizedText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Create a ref to store the latest submit function
   const submitAnswerRef = useRef<((answer: string) => void) | null>(null);
 
   useEffect(() => {
-    // Initialize TTS
     Tts.setDefaultLanguage('en-US');
-    Tts.engines().then(voices => {
-      console.log('Available voices:', voices);
-    });
 
-    // Tts.setDefaultRate(0.5);
     Tts.setDefaultPitch(1.0);
 
-    // Set up TTS event listeners
     Tts.addEventListener('tts-start', () => {
       setIsSpeaking(true);
     });
@@ -158,6 +151,7 @@ function App() {
       console.log('Submitting answer :', params, initialParams);
 
       const onSuccess = res => {
+        Voice.stop();
         if (res.data.valid_answer) {
           console.log('Valid answer received:', res.data);
 
@@ -197,7 +191,6 @@ function App() {
     setIsLoading(true);
     const onSuccess = res => {
       setIsLoading(false);
-      console.log('Questions:', res.data);
       setInitialParams(res.data?.question);
       setUserData(res.data?.user_data);
       if (res.data?.question_intro) {
@@ -228,6 +221,19 @@ function App() {
     Request('metadata', 'GET', {}, onSuccess, () => {});
   };
   useEffect(() => {
+    fetchConversation(category);
+    return () => {};
+  }, [category]);
+
+  const fetchConversation = (id: any) => {
+    if (!id) return;
+    const onSuccess = res => {
+      setConversation([...res.data]);
+    };
+    const params = { conversation_id: conversationId, categories: [id] };
+    Request('conversation', 'POST', params, onSuccess, () => {});
+  };
+  useEffect(() => {
     fetchQuestionList();
     fetchCategories();
     return () => {};
@@ -240,44 +246,62 @@ function App() {
         <Button onPress={() => setType(2)} title="View Data" />
       </View>
       {type === 1 ? (
-        <Animated.FlatList
-          ref={scrollRef}
-          data={messages}
-          style={{ height: '80%' }}
-          keyExtractor={(item, index) => `message-${index}`}
-          renderItem={({ item }) => {
-            const isSystem = item.role === 'system';
-            return (
-              <View
-                style={[
-                  styles.bubbleContainer,
-                  isSystem && styles.systemBubble,
-                ]}
-              >
-                <Animated.View
-                  entering={isSystem ? FadeInLeft : FadeInRight}
+        <View style={{ height: '100%' }}>
+          <Animated.FlatList
+            ref={scrollRef}
+            data={messages}
+            style={{ height: '80%' }}
+            keyExtractor={(item, index) => `message-${index}`}
+            renderItem={({ item }) => {
+              const isSystem = item.role === 'system';
+              return (
+                <View
                   style={[
-                    styles.bubble,
-                    !isSystem && { backgroundColor: '#bae8e0' },
+                    styles.bubbleContainer,
+                    isSystem && styles.systemBubble,
                   ]}
                 >
-                  <Animated.Text
-                    layout={CurvedTransition}
-                    style={{ fontSize: 16, color: '#333' }}
+                  <Animated.View
+                    entering={isSystem ? FadeInLeft : FadeInRight}
+                    style={[
+                      styles.bubble,
+                      !isSystem && { backgroundColor: '#bae8e0' },
+                    ]}
                   >
-                    {item.message}
-                  </Animated.Text>
-                </Animated.View>
-              </View>
-            );
-          }}
-          itemLayoutAnimation={CurvedTransition}
-        />
+                    <Animated.Text
+                      layout={CurvedTransition}
+                      style={{ fontSize: 16, color: '#333' }}
+                    >
+                      {item.message}
+                    </Animated.Text>
+                  </Animated.View>
+                </View>
+              );
+            }}
+            itemLayoutAnimation={CurvedTransition}
+          />
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.sttButton]}
+              onPress={handleSpeechToText}
+            >
+              <Text style={styles.buttonText}>
+                {isListening ? 'Stop Listening' : 'Give Answer'}
+              </Text>
+              <Text style={styles.buttonSubText}>
+                {isListening ? 'Listening...' : 'Tap to start recording'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       ) : (
-        <ScrollView style={{ height: '80%' }}>
+        <View style={{ height: '100%' }}>
           <ScrollView
             horizontal
-            contentContainerStyle={{ flexDirection: 'row', padding: 10 }}
+            contentContainerStyle={{
+              padding: 10,
+              height: 60,
+            }}
           >
             {categories?.map((item, index) => {
               const isSelected = item.id === category;
@@ -287,6 +311,7 @@ function App() {
                   style={{
                     backgroundColor: isSelected ? '#ffff99' : '#e0f7fa',
                     padding: 10,
+                    height: 40,
                     borderRadius: 5,
                     marginRight: 10,
                   }}
@@ -299,21 +324,11 @@ function App() {
               );
             })}
           </ScrollView>
-        </ScrollView>
+          <ScrollView style={{ height: '90%' }}>
+            <Conversation category={category} conversation={conversation} />
+          </ScrollView>
+        </View>
       )}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.sttButton]}
-          onPress={handleSpeechToText}
-        >
-          <Text style={styles.buttonText}>
-            {isListening ? 'Stop Listening' : 'Give Answer'}
-          </Text>
-          <Text style={styles.buttonSubText}>
-            {isListening ? 'Listening...' : 'Tap to start recording'}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -359,6 +374,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   buttonsContainer: {
+    height: '25%',
     padding: 20,
     alignItems: 'center',
     gap: 15,
