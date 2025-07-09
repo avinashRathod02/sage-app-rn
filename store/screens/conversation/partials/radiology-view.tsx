@@ -6,6 +6,7 @@ import {
   Alert,
   StyleSheet,
   FlatList,
+  Platform,
 } from 'react-native';
 import React, { useState } from 'react';
 import {
@@ -15,7 +16,7 @@ import {
   MediaType,
 } from 'react-native-image-picker';
 import { useAppStore } from '../../../appStore';
-import { Request } from '../../../../apiRequest';
+import axios from 'axios';
 
 interface RadioImage {
   id: string;
@@ -76,6 +77,7 @@ const RadiologyView = (props: any) => {
         Alert.alert('Camera Error', response.errorMessage);
         return;
       }
+      console.log('responshhhe', response);
 
       if (response.assets && response.assets[0]) {
         const asset = response.assets[0];
@@ -98,6 +100,8 @@ const RadiologyView = (props: any) => {
     };
 
     launchImageLibrary(options, (response: ImagePickerResponse) => {
+      console.log('responshhhe', response);
+
       if (response.didCancel) {
         console.log('User cancelled gallery picker');
         return;
@@ -113,7 +117,9 @@ const RadiologyView = (props: any) => {
         const asset = response.assets[0];
         const newImage: RadioImage = {
           id: Date.now().toString(),
-          uri: asset.uri || '',
+          ...asset,
+          path: asset.uri,
+
           name: asset.fileName || `radiology_${Date.now()}.jpg`,
         };
         setImages(prev => [...prev, newImage]);
@@ -137,45 +143,46 @@ const RadiologyView = (props: any) => {
     ]);
   };
 
+  const createFormData = (photo, body = {}) => {
+    const data = new FormData();
+
+    data.append('xray_images', {
+      name: photo.fileName,
+      type: photo.type,
+      uri: Platform.OS === 'ios' ? photo.uri.replace('file://', '') : photo.uri,
+    });
+
+    Object.keys(body).forEach(key => {
+      data.append(key, body[key]);
+    });
+
+    return data;
+  };
+
   const submitImages = async () => {
     if (images.length === 0) {
       Alert.alert('No Images', 'Please add at least one Radiology image');
       return;
     }
 
-    setIsSubmitting(true);
+    console.log('ddd');
 
-    const formData = new FormData();
-
-    images.forEach(image => {
-      formData.append('xray_images', {
-        uri: image.uri,
-        type: 'image/jpeg',
-        name: image.name,
-      } as any);
-    });
-
-    formData.append('conversation_id', conversationId);
-
-    const onSuccess = (response: any) => {
-      setIsSubmitting(false);
-      Alert.alert(
-        'Success',
-        `Successfully uploaded ${images.length} Radiology images!`,
-      );
-      console.log('Upload success:', response);
-      // Optionally clear images after successful upload
-      // setImages([]);
-    };
-
-    const onError = (error: string) => {
-      setIsSubmitting(false);
-      Alert.alert('Error', `Failed to upload images: ${error}`);
-      console.error('Upload error:', error);
-    };
-
-    // Call the API
-    Request('upload-xray', 'POST', formData, onSuccess, onError);
+    try {
+      await fetch('http://52.66.70.151:3000/poc/v1/upload-xray', {
+        method: 'POST',
+        body: createFormData(images[0], { conversation_id: conversationId }),
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Accept: 'application/json',
+        },
+      })
+        .then(response => response.json())
+        .then(res => console.log(res))
+        .catch(err => console.error(err));
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
+      throw error;
+    }
   };
 
   const canSubmit = images.length > 0 && images.length <= 10 && !isSubmitting;
