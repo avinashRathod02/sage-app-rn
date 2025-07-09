@@ -45,7 +45,7 @@ function App() {
   const [conversationId, setConversationId] = useState(`CON1751881500.379857`);
   const [conversation, setConversation] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [type, setType] = useState(1);
+  const [type, setType] = useState(1); // TODO: Change to 1 for conversation view, 2 for data view
   const [category, setCategory] = useState(0);
   const [buttonPressed, setButtonPressed] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -324,7 +324,10 @@ function App() {
               );
             })}
           </ScrollView>
-          <ScrollView style={{ height: '90%' }}>
+          <ScrollView
+            style={{ height: '90%' }}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
             <Conversation category={category} conversation={conversation} />
           </ScrollView>
         </View>

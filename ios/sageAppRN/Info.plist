@@ -47,6 +47,10 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to camera to capture insurance card photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to photo library to select insurance card images</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to microphone for speech recognition</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
