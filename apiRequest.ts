@@ -49,6 +49,7 @@ export const Request = async (
     };
 
     const response: AxiosResponse = await axios(config);
+    console.log('response', response);
 
     onSuccess(response.data);
   } catch (error) {

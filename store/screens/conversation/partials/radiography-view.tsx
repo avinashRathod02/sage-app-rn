@@ -250,6 +250,13 @@ const RadiographyView = (props: any) => {
             : `Submit ${images.length} Image${images.length !== 1 ? 's' : ''}`}
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.submitButton2]}
+        onPress={submitImages}
+        disabled={!canSubmit}
+      >
+        <Text style={[styles.submitButtonText]}>{'Analyze'}</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -348,6 +355,14 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#007AFF',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  submitButton2: {
+    backgroundColor: '#28a745',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
