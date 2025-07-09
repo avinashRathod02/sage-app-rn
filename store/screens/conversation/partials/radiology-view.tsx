@@ -5,7 +5,6 @@ import {
   Image,
   Alert,
   StyleSheet,
-  ScrollView,
   FlatList,
 } from 'react-native';
 import React, { useState } from 'react';
@@ -24,42 +23,38 @@ interface RadioImage {
   name: string;
 }
 
-const RadiographyView = (props: any) => {
+const RadiologyView = (props: any) => {
   const { categories } = useAppStore();
-  const { category } = props;
+  const { category, conversationId } = props;
   const [images, setImages] = useState<RadioImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentCategory = categories?.find(cat => cat.id === category);
-  if (currentCategory?.category !== 'Radiography') return null;
+  if (currentCategory?.category !== 'Radiology') return null;
 
   const showImagePicker = () => {
     if (images.length >= 10) {
       Alert.alert(
         'Limit Reached',
-        'You can only add up to 10 radiography images',
+        'You can only add up to 10 Radiology images',
       );
       return;
     }
 
-    Alert.alert(
-      'Add Radiography Image',
-      'Choose how you want to add the image',
-      [
-        {
-          text: 'Camera',
-          onPress: () => openCamera(),
-        },
-        {
-          text: 'Gallery',
-          onPress: () => openGallery(),
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ],
-    );
+    Alert.alert('Add Radiology Image', 'Choose how you want to add the image', [
+      {
+        text: 'Camera',
+        onPress: () => openCamera(),
+      },
+      {
+        text: 'Gallery',
+        onPress: () => openGallery(),
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
   };
 
   const openCamera = () => {
@@ -87,7 +82,7 @@ const RadiographyView = (props: any) => {
         const newImage: RadioImage = {
           id: Date.now().toString(),
           uri: asset.uri || '',
-          name: asset.fileName || `radiography_${Date.now()}.jpg`,
+          name: asset.fileName || `radiology_${Date.now()}.jpg`,
         };
         setImages(prev => [...prev, newImage]);
       }
@@ -119,7 +114,7 @@ const RadiographyView = (props: any) => {
         const newImage: RadioImage = {
           id: Date.now().toString(),
           uri: asset.uri || '',
-          name: asset.fileName || `radiography_${Date.now()}.jpg`,
+          name: asset.fileName || `radiology_${Date.now()}.jpg`,
         };
         setImages(prev => [...prev, newImage]);
       }
@@ -144,7 +139,7 @@ const RadiographyView = (props: any) => {
 
   const submitImages = async () => {
     if (images.length === 0) {
-      Alert.alert('No Images', 'Please add at least one radiography image');
+      Alert.alert('No Images', 'Please add at least one Radiology image');
       return;
     }
 
@@ -152,23 +147,21 @@ const RadiographyView = (props: any) => {
 
     const formData = new FormData();
 
-    // Add all images to form data
     images.forEach(image => {
-      formData.append('radiographyImages', {
+      formData.append('xray_images', {
         uri: image.uri,
         type: 'image/jpeg',
         name: image.name,
       } as any);
     });
 
-    // Add metadata
-    formData.append('imageCount', images.length.toString());
+    formData.append('conversation_id', conversationId);
 
     const onSuccess = (response: any) => {
       setIsSubmitting(false);
       Alert.alert(
         'Success',
-        `Successfully uploaded ${images.length} radiography images!`,
+        `Successfully uploaded ${images.length} Radiology images!`,
       );
       console.log('Upload success:', response);
       // Optionally clear images after successful upload
@@ -182,7 +175,7 @@ const RadiographyView = (props: any) => {
     };
 
     // Call the API
-    Request('upload-radiography', 'POST', formData, onSuccess, onError);
+    Request('upload-xray', 'POST', formData, onSuccess, onError);
   };
 
   const canSubmit = images.length > 0 && images.length <= 10 && !isSubmitting;
@@ -212,9 +205,9 @@ const RadiographyView = (props: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Radiography Images</Text>
+      <Text style={styles.title}>Radiology Images</Text>
       <Text style={styles.subtitle}>
-        Add radiography images (minimum 1, maximum 10)
+        Add Radiology images (minimum 1, maximum 10)
       </Text>
       <Text style={styles.counter}>{images.length}/10 images added</Text>
 
@@ -245,17 +238,8 @@ const RadiographyView = (props: any) => {
             !canSubmit && styles.submitButtonTextDisabled,
           ]}
         >
-          {isSubmitting
-            ? 'Uploading...'
-            : `Submit ${images.length} Image${images.length !== 1 ? 's' : ''}`}
+          {isSubmitting ? 'Saving...' : 'Save'}
         </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.submitButton2]}
-        onPress={submitImages}
-        disabled={!canSubmit}
-      >
-        <Text style={[styles.submitButtonText]}>{'Analyze'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -361,14 +345,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  submitButton2: {
-    backgroundColor: '#28a745',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
   submitButtonDisabled: {
     backgroundColor: '#ccc',
   },
@@ -382,4 +358,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RadiographyView;
+export default RadiologyView;

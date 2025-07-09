@@ -330,7 +330,7 @@ const InsuranceView = (props: any) => {
             !canSubmit && styles.submitButtonTextDisabled,
           ]}
         >
-          {isSubmitting ? 'Uploading...' : 'Submit Insurance Images'}
+          {isSubmitting ? 'Saving...' : 'Save'}
         </Text>
       </TouchableOpacity>
 

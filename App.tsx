@@ -19,7 +19,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LogBox } from 'react-native';
 import { useAppStore } from './store/appStore';
-import Reactotron from 'reactotron-react-native';
 import { Conversation } from './store/screens/conversation';
 
 LogBox.ignoreLogs(['Warning: ...']);
@@ -45,7 +44,7 @@ function App() {
   const [conversationId, setConversationId] = useState(`CON1751881500.379857`);
   const [conversation, setConversation] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [type, setType] = useState(1); // TODO: Change to 1 for conversation view, 2 for data view
+  const [type, setType] = useState(1);
   const [category, setCategory] = useState(0);
   const [buttonPressed, setButtonPressed] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -328,7 +327,11 @@ function App() {
             style={{ height: '90%' }}
             contentContainerStyle={{ paddingBottom: 100 }}
           >
-            <Conversation category={category} conversation={conversation} />
+            <Conversation
+              category={category}
+              conversationId={conversationId}
+              conversation={conversation}
+            />
           </ScrollView>
         </View>
       )}
@@ -399,9 +402,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  ttsButton: {
-    backgroundColor: '#34C759',
   },
   sttButton: {
     backgroundColor: '#FF3B30',
