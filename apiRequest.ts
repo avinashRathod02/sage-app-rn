@@ -4,7 +4,8 @@
 
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-const BASE_URL = 'http://52.66.70.151:3000/poc/v1/';
+export const BASE_URL =
+  'https://tj1u3pbfoc.execute-api.ap-south-1.amazonaws.com/dev/poc/v1/';
 
 export interface Question {
   id?: string;

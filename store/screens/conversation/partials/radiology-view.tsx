@@ -17,6 +17,7 @@ import {
 } from 'react-native-image-picker';
 import { useAppStore } from '../../../appStore';
 import axios from 'axios';
+import { BASE_URL } from '../../../../apiRequest';
 
 interface RadioImage {
   id: string;
@@ -143,13 +144,15 @@ const RadiologyView = (props: any) => {
     ]);
   };
 
-  const createFormData = (photo, body = {}) => {
+  const createFormData = (images, body = {}) => {
     const data = new FormData();
 
-    data.append('xray_images', {
-      name: photo.fileName,
-      type: photo.type,
-      uri: Platform.OS === 'ios' ? photo.uri.replace('file://', '') : photo.uri,
+    images.forEach(image => {
+      data.append('xray_images', {
+        uri: image.uri,
+        type: 'image/jpeg',
+        name: image.name,
+      } as any);
     });
 
     Object.keys(body).forEach(key => {
@@ -168,9 +171,9 @@ const RadiologyView = (props: any) => {
     console.log('ddd');
 
     try {
-      await fetch('http://52.66.70.151:3000/poc/v1/upload-xray', {
+      await fetch(`${BASE_URL}upload-xray`, {
         method: 'POST',
-        body: createFormData(images[0], { conversation_id: conversationId }),
+        body: createFormData(images, { conversation_id: conversationId }),
         headers: {
           'Content-Type': 'multipart/form-data',
           Accept: 'application/json',

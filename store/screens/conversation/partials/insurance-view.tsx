@@ -7,9 +7,11 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
+  Platform,
+  Modal,
 } from 'react-native';
 import React, { useState } from 'react';
-import DatePicker from 'react-native-date-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   launchImageLibrary,
   launchCamera,
@@ -335,33 +337,104 @@ const InsuranceView = (props: any) => {
       </TouchableOpacity>
 
       {/* Date Pickers */}
-      <DatePicker
-        modal
-        open={showStartDatePicker}
-        date={startDate || new Date()}
-        mode="date"
-        onConfirm={date => {
-          setShowStartDatePicker(false);
-          setStartDate(date);
-        }}
-        onCancel={() => {
-          setShowStartDatePicker(false);
-        }}
-      />
+      {Platform.OS === 'ios' ? (
+        <>
+          {/* iOS Modal for Start Date */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showStartDatePicker}
+            onRequestClose={() => setShowStartDatePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                    <Text style={styles.modalButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.modalTitle}>Select Start Date</Text>
+                  <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                    <Text style={styles.modalButton}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={startDate || new Date()}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event: any, selectedDate?: Date) => {
+                    if (selectedDate) {
+                      setStartDate(selectedDate);
+                    }
+                  }}
+                />
+              </View>
+            </View>
+          </Modal>
 
-      <DatePicker
-        modal
-        open={showEndDatePicker}
-        date={endDate || new Date()}
-        mode="date"
-        onConfirm={date => {
-          setShowEndDatePicker(false);
-          setEndDate(date);
-        }}
-        onCancel={() => {
-          setShowEndDatePicker(false);
-        }}
-      />
+          {/* iOS Modal for End Date */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showEndDatePicker}
+            onRequestClose={() => setShowEndDatePicker(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                    <Text style={styles.modalButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.modalTitle}>Select End Date</Text>
+                  <TouchableOpacity onPress={() => setShowEndDatePicker(false)}>
+                    <Text style={styles.modalButton}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={endDate || new Date()}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event: any, selectedDate?: Date) => {
+                    if (selectedDate) {
+                      setEndDate(selectedDate);
+                    }
+                  }}
+                />
+              </View>
+            </View>
+          </Modal>
+        </>
+      ) : (
+        <>
+          {/* Android Native Picker */}
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={startDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event: any, selectedDate?: Date) => {
+                setShowStartDatePicker(false);
+                if (selectedDate) {
+                  setStartDate(selectedDate);
+                }
+              }}
+            />
+          )}
+
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={endDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event: any, selectedDate?: Date) => {
+                setShowEndDatePicker(false);
+                if (selectedDate) {
+                  setEndDate(selectedDate);
+                }
+              }}
+            />
+          )}
+        </>
+      )}
     </ScrollView>
   );
 };
@@ -477,6 +550,35 @@ const styles = StyleSheet.create({
   datePickerText: {
     fontSize: 16,
     color: '#333',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalButton: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
 });
 

@@ -41,7 +41,9 @@ function App() {
     setUserData,
   } = useAppStore();
 
-  const [conversationId, setConversationId] = useState(`CON1751881500.379857`);
+  const [conversationId, setConversationId] = useState(
+    `CON${new Date().getTime()}`,
+  );
   const [conversation, setConversation] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState(1);
