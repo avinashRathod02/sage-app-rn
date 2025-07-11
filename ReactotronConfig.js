@@ -1,7 +1,6 @@
 import {NativeModules} from 'react-native'
 import Reactotron from 'reactotron-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {isIosPlatform} from 'utils'
 
 let scriptHostname = 'localhost'
 if (__DEV__) {

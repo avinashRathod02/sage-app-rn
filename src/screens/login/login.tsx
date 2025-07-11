@@ -4,7 +4,12 @@ import {useNavigation} from '@react-navigation/native'
 import {routes} from 'navigation'
 import {useState} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
-import {setConversationId} from 'store/common/slice'
+import {
+  setConversationId,
+  setInitialParams,
+  setMessages,
+  setUserData
+} from 'store/common/slice'
 import {RootState} from 'store'
 
 const Login = () => {
@@ -13,7 +18,13 @@ const Login = () => {
   const navigation = useNavigation()
   const [value, setValue] = useState(conversationId)
   const login = () => {
-    dispatch(setConversationId(value))
+    if (value !== conversationId) {
+      dispatch(setConversationId(value))
+      dispatch(setUserData(null))
+      dispatch(setInitialParams(null))
+      dispatch(setMessages([]))
+    } else {
+    }
     navigation.navigate(routes.WELCOME)
   }
   return (
