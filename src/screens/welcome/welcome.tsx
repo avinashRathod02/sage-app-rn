@@ -58,7 +58,7 @@ const Welcome = () => {
   }
 
   const navigation = useNavigation()
-  const start = () => navigation.navigate(routes.CONVERSATION)
+  const start = () => navigation.navigate(routes.CHAT)
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />

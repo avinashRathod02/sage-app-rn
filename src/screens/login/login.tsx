@@ -31,11 +31,7 @@ const Login = () => {
     <View className="flex-1 items-center justify-center bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
       <Text className="font-bold text-2xl text-gray-700" text="Login" />
-      <BaseInput
-        value={value}
-        label="Cardholder name"
-        onChangeText={setValue}
-      />
+      <BaseInput value={value} label="Email" onChangeText={setValue} />
       <BaseButton title="Login" onPress={login} />
     </View>
   )
