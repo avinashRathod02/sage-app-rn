@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   title: {
+    fontSize: 18,
     textAlign: 'center',
     paddingHorizontal: 8,
     color: 'white'

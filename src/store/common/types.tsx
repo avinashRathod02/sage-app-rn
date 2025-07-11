@@ -1,4 +1,5 @@
 export interface IInitialCommonStateProps {
+  conversationId?: string 
   initialParams: InitialParams | null
   userData: any // Assuming userData is of type any, adjust as needed
   categories?: CategoryId[] // Optional categories array

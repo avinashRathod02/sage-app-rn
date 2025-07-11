@@ -2,6 +2,7 @@ import {createSlice} from '@reduxjs/toolkit'
 import {IInitialCommonStateProps} from './types'
 
 const initialState: IInitialCommonStateProps = {
+  conversationId: '',
   initialParams: null,
   userData: null,
   categories: []
@@ -11,6 +12,9 @@ export const commonSlice = createSlice({
   name: 'common',
   initialState,
   reducers: {
+    setConversationId: (state, action) => {
+      state.conversationId = action.payload
+    },
     setCategories: (state, action) => {
       state.categories = action.payload
     },
@@ -33,7 +37,7 @@ export const {
   setCategories,
   setUserData,
   setInitialParams,
-  updateInitialParams
+  updateInitialParams,setConversationId
 } = commonSlice.actions
 
 export default commonSlice.reducer

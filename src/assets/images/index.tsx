@@ -1,4 +1,6 @@
 export const ASSET_IMAGES = {
   BG: require('./bg.png'),
-  circle: require('./circle.gif')
+  circle_animated: require('./circle-animated.gif'),
+  wave: require('./wave.jpg'),
+  wave_animated: require('./wave-animated.gif')
 }

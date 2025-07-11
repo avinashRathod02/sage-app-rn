@@ -1,4 +1,5 @@
 export * from './button-view'
 export * from './base-button'
 export * from './base-image'
+export * from './base-input'
 export * from './text'
