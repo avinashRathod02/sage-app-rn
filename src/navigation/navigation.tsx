@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator()
 const MainApp = () => {
   return (
     <Stack.Navigator
-      initialRouteName={routes.ABOUT_US}
+      initialRouteName={routes.LOGIN}
       screenOptions={{headerShown: false}}>
       {CommonNavigator}
     </Stack.Navigator>
