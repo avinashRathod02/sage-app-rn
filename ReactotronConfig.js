@@ -1,16 +1,16 @@
-import { NativeModules } from 'react-native';
-import Reactotron from 'reactotron-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isIosPlatform } from 'utils';
+import {NativeModules} from 'react-native'
+import Reactotron from 'reactotron-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import {isIosPlatform} from 'utils'
 
-let scriptHostname = 'localhost';
+let scriptHostname = 'localhost'
 if (__DEV__) {
-  const scriptURL = NativeModules.SourceCode.scriptURL;
+  const scriptURL = NativeModules.SourceCode.scriptURL
 }
 
 const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage) // AsyncStorage would either come from `react-native` or `@react-native-community/async-storage` depending on where you get it from
-  .configure({ name: 'SStudy', host: scriptHostname }) // controls connection & communication settings
+  .configure({name: 'SageApp', host: scriptHostname}) // controls connection & communication settings
   .useReactNative() // add all built-in react native plugins
-  .connect(); // let's connect!
+  .connect() // let's connect!
 
-export default reactotron;
+export default reactotron
