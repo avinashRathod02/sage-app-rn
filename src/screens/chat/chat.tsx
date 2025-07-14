@@ -111,18 +111,15 @@ const Chat = () => {
       }
       dispatch(updateMessages({role: 'user', message: answer}))
       scrollRef?.current?.scrollToEnd({animated: true})
-      console.log('Submitting answer :', params, initialParams)
-
       const onSuccess = res => {
         Voice.stop()
         if (res.data.valid_answer) {
-          console.log('Valid answer received:', res.data)
-
           dispatch(setInitialParams(res.data?.next_question_data))
-
           dispatch(setUserData(res.data?.user_data))
           const newQuestion = res.data?.next_question_data?.question
           dispatch(updateMessages({role: 'system', message: newQuestion}))
+          scrollRef?.current?.scrollToEnd({animated: true})
+
           setIsAsking(true)
           Tts.speak(newQuestion)
         } else {
@@ -130,6 +127,7 @@ const Chat = () => {
           dispatch(
             updateMessages({role: 'system', message: res.data?.explanation})
           )
+          scrollRef?.current?.scrollToEnd({animated: true})
           Tts.speak(res.data?.explanation)
         }
       }
@@ -146,7 +144,6 @@ const Chat = () => {
   }, [submitAnswer])
 
   const navigation = useNavigation()
-  const start = () => navigation.navigate(routes.CONVERSATION)
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
@@ -164,7 +161,7 @@ const Chat = () => {
                 entering={isSystem ? FadeInLeft : FadeInRight}
                 style={[
                   styles.bubble,
-                  !isSystem && {backgroundColor: '#bae8e0'}
+                  !isSystem && {backgroundColor: '#b1f1fa'}
                 ]}>
                 <Animated.Text
                   layout={CurvedTransition}
@@ -177,16 +174,21 @@ const Chat = () => {
         }}
         itemLayoutAnimation={CurvedTransition}
       />
-      <ButtonView onPress={start} className="rounded-full overflow-hidden">
+      <ButtonView
+        onPress={speechToText}
+        className="rounded-full mb-14 overflow-hidden">
         <BaseImage
           name={isListening ? 'wave_animated' : 'wave'}
-          style={{width: 100, height: 100}}
+          style={{width: 80, height: 80}}
         />
       </ButtonView>
-      <Text text={recognizedText} className="self-center" />
+      <Text
+        text={recognizedText}
+        className="self-center text-gray-600 absolute bottom-6"
+      />
       <Text
         text={!isListening ? ' ' : 'Listening...'}
-        className="self-center font-bold text-lg"
+        className="self-center font-bold text-gray-600 absolute bottom-8 text-lg"
       />
     </View>
   )
@@ -194,7 +196,8 @@ const Chat = () => {
 
 const styles = StyleSheet.create({
   list: {
-    maxHeight: '70%',
+    maxHeight: '75%',
+    borderWidth: 1,
     width: '100%',
     marginTop: 40
   },

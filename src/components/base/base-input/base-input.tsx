@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {
   TextInput,
   StyleSheet,
@@ -6,13 +6,13 @@ import {
   Animated,
   Easing,
   TouchableWithoutFeedback,
-  ViewStyle
+  TextInputProps
 } from 'react-native'
 import {fonts} from 'utils/fonts'
 import Text from '../text/text'
 import colors from 'theme'
 
-interface Props extends ViewStyle {
+interface Props extends TextInputProps {
   label: string
   value: string
   errorText?: string | null
