@@ -34,22 +34,23 @@ export const BaseInput = (props: Props) => {
     }).start()
   }, [focusAnim, isFocused, value])
 
-  let color = isFocused ? colors.primary : colors.gray3
+  let color = isFocused ? colors.primary : colors.grayLight9
   if (errorText) {
     color = colors.danger
   }
 
   return (
-    <View className="w-10/12 my-2" style={props.style}>
+    <View className="w-full mt-2 mb-4" style={props.style}>
       <TextInput
         placeholderTextColor={colors.gray5}
+        ref={inputRef}
+        {...restOfProps}
         style={[
           styles.input,
           {borderColor: color},
-          isFocused && {color: colors.primary}
+          isFocused && {color: colors.primary},
+          props.style
         ]}
-        ref={inputRef}
-        {...restOfProps}
         value={value}
         onBlur={event => {
           setIsFocused(false)
@@ -91,8 +92,7 @@ export const BaseInput = (props: Props) => {
           <Text
             style={[
               styles.label,
-              {
-                color
+              { color
               }
             ]}>
             {label}
