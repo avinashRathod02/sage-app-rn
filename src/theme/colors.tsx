@@ -1,6 +1,6 @@
 export default {
   transparent: 'transparent',
-  primary: '#1B76F5',
+  primary: '#1988C5',
   primary2: '#FF727D',
   primary3: '#FFD4D7',
   primary4: '#FFD4D799',

@@ -8,188 +8,189 @@ import {
   ScrollView,
   TextInput,
   Platform,
-  Modal,
-} from 'react-native';
-import React, { useState } from 'react';
-import DateTimePicker from '@react-native-community/datetimepicker';
+  Modal
+} from 'react-native'
+import {useState} from 'react'
+import DateTimePicker from '@react-native-community/datetimepicker'
 import {
   launchImageLibrary,
   launchCamera,
   ImagePickerResponse,
-  MediaType,
-} from 'react-native-image-picker';
-import { useAppStore } from '../../../appStore';
-import { Request } from '../../../../apiRequest';
+  MediaType
+} from 'react-native-image-picker'
+import {Request} from '../../../../apiRequest'
+import {useSelector} from 'react-redux'
+import {RootState} from 'store'
 
 const InsuranceView = (props: any) => {
-  const { categories } = useAppStore();
-  const { category } = props;
-  const [frontImage, setFrontImage] = useState<string | null>(null);
-  const [backImage, setBackImage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {categories} = useSelector((state: RootState) => state.common)
+  const {category} = props
+  const [frontImage, setFrontImage] = useState<string | null>(null)
+  const [backImage, setBackImage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form fields
-  const [insurancePlanName, setInsurancePlanName] = useState('');
-  const [memberId, setMemberId] = useState('');
-  const [groupNumber, setGroupNumber] = useState('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [insurancePlanName, setInsurancePlanName] = useState('')
+  const [memberId, setMemberId] = useState('')
+  const [groupNumber, setGroupNumber] = useState('')
+  const [startDate, setStartDate] = useState<Date | null>(null)
+  const [endDate, setEndDate] = useState<Date | null>(null)
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false)
 
-  const currentCategory = categories?.find(cat => cat.id === category);
-  if (currentCategory?.category !== 'Insurance Detail') return null;
+  const currentCategory = categories?.find(cat => cat.id === category)
+  if (currentCategory?.category !== 'Insurance Detail') return null
 
   const showImagePicker = (type: 'front' | 'back') => {
     Alert.alert('Select Image', 'Choose how you want to select the image', [
       {
         text: 'Camera',
-        onPress: () => openCamera(type),
+        onPress: () => openCamera(type)
       },
       {
         text: 'Gallery',
-        onPress: () => openGallery(type),
+        onPress: () => openGallery(type)
       },
       {
         text: 'Cancel',
-        style: 'cancel',
-      },
-    ]);
-  };
+        style: 'cancel'
+      }
+    ])
+  }
 
   const openCamera = (type: 'front' | 'back') => {
     const options = {
       mediaType: 'photo' as MediaType,
       quality: 0.8 as any,
       maxWidth: 1000,
-      maxHeight: 1000,
-    };
+      maxHeight: 1000
+    }
 
     launchCamera(options, (response: ImagePickerResponse) => {
       if (response.didCancel) {
-        console.log('User cancelled camera picker');
-        return;
+        console.log('User cancelled camera picker')
+        return
       }
 
       if (response.errorMessage) {
-        console.error('Camera Error: ', response.errorMessage);
-        return;
+        console.error('Camera Error: ', response.errorMessage)
+        return
       }
 
       if (response.assets && response.assets[0]) {
-        const imageUri = response.assets[0].uri;
+        const imageUri = response.assets[0].uri
         if (type === 'front') {
-          setFrontImage(imageUri || null);
+          setFrontImage(imageUri || null)
         } else {
-          setBackImage(imageUri || null);
+          setBackImage(imageUri || null)
         }
       }
-    });
-  };
+    })
+  }
 
   const openGallery = (type: 'front' | 'back') => {
     const options = {
       mediaType: 'photo' as MediaType,
       quality: 0.8 as any,
       maxWidth: 1000,
-      maxHeight: 1000,
-    };
+      maxHeight: 1000
+    }
 
     launchImageLibrary(options, (response: ImagePickerResponse) => {
       if (response.didCancel) {
-        console.log('User cancelled gallery picker');
-        return;
+        console.log('User cancelled gallery picker')
+        return
       }
 
       if (response.errorMessage) {
-        console.error('Gallery Error: ', response.errorMessage);
-        return;
+        console.error('Gallery Error: ', response.errorMessage)
+        return
       }
 
       if (response.assets && response.assets[0]) {
-        const imageUri = response.assets[0].uri;
+        const imageUri = response.assets[0].uri
         if (type === 'front') {
-          setFrontImage(imageUri || null);
+          setFrontImage(imageUri || null)
         } else {
-          setBackImage(imageUri || null);
+          setBackImage(imageUri || null)
         }
       }
-    });
-  };
+    })
+  }
 
   const submitImages = async () => {
     // Validate all required fields
     if (!frontImage || !backImage) {
       Alert.alert(
         'Error',
-        'Please select both front and back images of your insurance',
-      );
-      return;
+        'Please select both front and back images of your insurance'
+      )
+      return
     }
 
     if (!insurancePlanName.trim()) {
-      Alert.alert('Error', 'Please enter the insurance plan name');
-      return;
+      Alert.alert('Error', 'Please enter the insurance plan name')
+      return
     }
 
     if (!memberId.trim()) {
-      Alert.alert('Error', 'Please enter the member ID');
-      return;
+      Alert.alert('Error', 'Please enter the member ID')
+      return
     }
 
     if (!groupNumber.trim()) {
-      Alert.alert('Error', 'Please enter the group number');
-      return;
+      Alert.alert('Error', 'Please enter the group number')
+      return
     }
 
     if (!startDate) {
-      Alert.alert('Error', 'Please select the start date');
-      return;
+      Alert.alert('Error', 'Please select the start date')
+      return
     }
 
     if (!endDate) {
-      Alert.alert('Error', 'Please select the end date');
-      return;
+      Alert.alert('Error', 'Please select the end date')
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
-    const formData = new FormData();
+    const formData = new FormData()
 
     // Add form fields
-    formData.append('insurance_plan_name', insurancePlanName);
-    formData.append('member_id', memberId);
-    formData.append('group_number', groupNumber);
-    formData.append('start_date', startDate.toISOString().split('T')[0]);
-    formData.append('end_date', endDate.toISOString().split('T')[0]);
+    formData.append('insurance_plan_name', insurancePlanName)
+    formData.append('member_id', memberId)
+    formData.append('group_number', groupNumber)
+    formData.append('start_date', startDate.toISOString().split('T')[0])
+    formData.append('end_date', endDate.toISOString().split('T')[0])
 
     // Add front image
     formData.append('insurance_card_1', {
       uri: frontImage,
       type: 'image/jpeg',
-      name: 'insurance_front.jpg',
-    } as any);
+      name: 'insurance_front.jpg'
+    } as any)
 
     // Add back image
     formData.append('insurance_card_2', {
       uri: backImage,
       type: 'image/jpeg',
-      name: 'insurance_back.jpg',
-    } as any);
+      name: 'insurance_back.jpg'
+    } as any)
 
     const onSuccess = (response: any) => {
-      setIsSubmitting(false);
-      console.log('Upload success:', response);
-    };
+      setIsSubmitting(false)
+      console.log('Upload success:', response)
+    }
 
     const onError = (error: string) => {
-      setIsSubmitting(false);
-      console.error('Upload error:', error);
-    };
+      setIsSubmitting(false)
+      console.error('Upload error:', error)
+    }
 
     // Call the API
-    Request('store-openemr', 'POST', formData, onSuccess, onError);
-  };
+    Request('store-openemr', 'POST', formData, onSuccess, onError)
+  }
 
   const canSubmit =
     frontImage &&
@@ -199,7 +200,7 @@ const InsuranceView = (props: any) => {
     groupNumber.trim() &&
     startDate &&
     endDate &&
-    !isSubmitting;
+    !isSubmitting
 
   return (
     <ScrollView style={styles.container}>
@@ -213,10 +214,9 @@ const InsuranceView = (props: any) => {
         <Text style={styles.sectionTitle}>Front Side</Text>
         <TouchableOpacity
           style={styles.imagePicker}
-          onPress={() => showImagePicker('front')}
-        >
+          onPress={() => showImagePicker('front')}>
           {frontImage ? (
-            <Image source={{ uri: frontImage }} style={styles.selectedImage} />
+            <Image source={{uri: frontImage}} style={styles.selectedImage} />
           ) : (
             <View style={styles.placeholderContainer}>
               <Text style={styles.placeholderText}>Tap to add front image</Text>
@@ -233,10 +233,9 @@ const InsuranceView = (props: any) => {
         <Text style={styles.sectionTitle}>Back Side</Text>
         <TouchableOpacity
           style={styles.imagePicker}
-          onPress={() => showImagePicker('back')}
-        >
+          onPress={() => showImagePicker('back')}>
           {backImage ? (
-            <Image source={{ uri: backImage }} style={styles.selectedImage} />
+            <Image source={{uri: backImage}} style={styles.selectedImage} />
           ) : (
             <View style={styles.placeholderContainer}>
               <Text style={styles.placeholderText}>Tap to add back image</Text>
@@ -289,14 +288,12 @@ const InsuranceView = (props: any) => {
           <Text style={styles.inputLabel}>Start Date *</Text>
           <TouchableOpacity
             style={styles.datePickerButton}
-            onPress={() => setShowStartDatePicker(true)}
-          >
+            onPress={() => setShowStartDatePicker(true)}>
             <Text
               style={[
                 styles.datePickerText,
-                !startDate && styles.placeholderText,
-              ]}
-            >
+                !startDate && styles.placeholderText
+              ]}>
               {startDate ? startDate.toLocaleDateString() : 'Select start date'}
             </Text>
           </TouchableOpacity>
@@ -306,14 +303,12 @@ const InsuranceView = (props: any) => {
           <Text style={styles.inputLabel}>End Date *</Text>
           <TouchableOpacity
             style={styles.datePickerButton}
-            onPress={() => setShowEndDatePicker(true)}
-          >
+            onPress={() => setShowEndDatePicker(true)}>
             <Text
               style={[
                 styles.datePickerText,
-                !endDate && styles.placeholderText,
-              ]}
-            >
+                !endDate && styles.placeholderText
+              ]}>
               {endDate ? endDate.toLocaleDateString() : 'Select end date'}
             </Text>
           </TouchableOpacity>
@@ -324,14 +319,12 @@ const InsuranceView = (props: any) => {
       <TouchableOpacity
         style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
         onPress={submitImages}
-        disabled={!canSubmit}
-      >
+        disabled={!canSubmit}>
         <Text
           style={[
             styles.submitButtonText,
-            !canSubmit && styles.submitButtonTextDisabled,
-          ]}
-        >
+            !canSubmit && styles.submitButtonTextDisabled
+          ]}>
           {isSubmitting ? 'Saving...' : 'Save'}
         </Text>
       </TouchableOpacity>
@@ -344,16 +337,17 @@ const InsuranceView = (props: any) => {
             animationType="slide"
             transparent={true}
             visible={showStartDatePicker}
-            onRequestClose={() => setShowStartDatePicker(false)}
-          >
+            onRequestClose={() => setShowStartDatePicker(false)}>
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                  <TouchableOpacity
+                    onPress={() => setShowStartDatePicker(false)}>
                     <Text style={styles.modalButton}>Cancel</Text>
                   </TouchableOpacity>
                   <Text style={styles.modalTitle}>Select Start Date</Text>
-                  <TouchableOpacity onPress={() => setShowStartDatePicker(false)}>
+                  <TouchableOpacity
+                    onPress={() => setShowStartDatePicker(false)}>
                     <Text style={styles.modalButton}>Done</Text>
                   </TouchableOpacity>
                 </View>
@@ -363,7 +357,7 @@ const InsuranceView = (props: any) => {
                   display="spinner"
                   onChange={(event: any, selectedDate?: Date) => {
                     if (selectedDate) {
-                      setStartDate(selectedDate);
+                      setStartDate(selectedDate)
                     }
                   }}
                 />
@@ -376,8 +370,7 @@ const InsuranceView = (props: any) => {
             animationType="slide"
             transparent={true}
             visible={showEndDatePicker}
-            onRequestClose={() => setShowEndDatePicker(false)}
-          >
+            onRequestClose={() => setShowEndDatePicker(false)}>
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
@@ -395,7 +388,7 @@ const InsuranceView = (props: any) => {
                   display="spinner"
                   onChange={(event: any, selectedDate?: Date) => {
                     if (selectedDate) {
-                      setEndDate(selectedDate);
+                      setEndDate(selectedDate)
                     }
                   }}
                 />
@@ -412,9 +405,9 @@ const InsuranceView = (props: any) => {
               mode="date"
               display="default"
               onChange={(event: any, selectedDate?: Date) => {
-                setShowStartDatePicker(false);
+                setShowStartDatePicker(false)
                 if (selectedDate) {
-                  setStartDate(selectedDate);
+                  setStartDate(selectedDate)
                 }
               }}
             />
@@ -426,9 +419,9 @@ const InsuranceView = (props: any) => {
               mode="date"
               display="default"
               onChange={(event: any, selectedDate?: Date) => {
-                setShowEndDatePicker(false);
+                setShowEndDatePicker(false)
                 if (selectedDate) {
-                  setEndDate(selectedDate);
+                  setEndDate(selectedDate)
                 }
               }}
             />
@@ -436,66 +429,64 @@ const InsuranceView = (props: any) => {
         </>
       )}
     </ScrollView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 20
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
-    color: '#333',
+    color: '#333'
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 30,
     color: '#666',
-    lineHeight: 22,
+    lineHeight: 22
   },
   imageSection: {
-    marginBottom: 25,
+    marginBottom: 25
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 10,
-    color: '#333',
+    color: '#333'
   },
   imagePicker: {
     borderWidth: 2,
     borderColor: '#ddd',
     borderRadius: 12,
     borderStyle: 'dashed',
-    backgroundColor: '#f9f9f9',
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   selectedImage: {
     width: '100%',
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: 'cover'
   },
   placeholderContainer: {
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 20
   },
   placeholderText: {
     fontSize: 16,
     color: '#666',
     marginBottom: 5,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   placeholderSubtext: {
     fontSize: 14,
     color: '#999',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   submitButton: {
     backgroundColor: '#007AFF',
@@ -504,30 +495,28 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 30
   },
-  submitButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
+  submitButtonDisabled: {},
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600'
   },
   submitButtonTextDisabled: {
-    color: '#999',
+    color: '#999'
   },
   formSection: {
-    marginBottom: 25,
+    marginBottom: 25
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#333',
+    color: '#333'
   },
   textInput: {
     borderWidth: 1,
@@ -536,31 +525,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#333',
+    color: '#333'
   },
   datePickerButton: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 15,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
+    paddingVertical: 12
   },
   datePickerText: {
     fontSize: 16,
-    color: '#333',
+    color: '#333'
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   modalContent: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 34,
+    paddingBottom: 34
   },
   modalHeader: {
     flexDirection: 'row',
@@ -568,18 +555,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#e0e0e0'
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#333'
   },
   modalButton: {
     fontSize: 16,
     color: '#007AFF',
-    fontWeight: '600',
-  },
-});
+    fontWeight: '600'
+  }
+})
 
-export default InsuranceView;
+export default InsuranceView

@@ -1,7 +1,5 @@
 import {Alert, StyleSheet, View} from 'react-native'
 import {BaseImage, ButtonView, Text} from 'components'
-import {useNavigation} from '@react-navigation/native'
-import {routes} from 'navigation'
 import Tts from 'react-native-tts'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
@@ -15,26 +13,35 @@ import Animated, {
 } from 'react-native-reanimated'
 import Voice from '@react-native-voice/voice'
 
+// Define message type for better type checking
+interface Message {
+  role: string
+  message: string
+}
+
 const Chat = () => {
-  const scrollRef = useRef<Animated.FlatList>(null)
+  const scrollRef = useRef<Animated.FlatList<Message>>(null)
   const submitAnswerRef = useRef<((answer: string) => void) | null>(null)
+  const retryCountRef = useRef<number>(0) // Track consecutive retries
 
   const dispatch = useDispatch()
   const {messages, userData, conversationId, initialParams} = useSelector(
     (state: RootState) => state.common
   )
-  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [_isSpeaking, setIsSpeaking] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isAsking, setIsAsking] = useState(false)
   const [recognizedText, setRecognizedText] = useState('')
 
-  const speechToText = async () => {
+  const speechToText = useCallback(async () => {
     try {
       if (isListening) {
         await Voice.stop()
         setIsListening(false)
       } else {
+        // Reset retry counter when manually starting speech recognition
+        retryCountRef.current = 0
         setRecognizedText('')
         await Voice.start('en-US')
       }
@@ -43,7 +50,7 @@ const Chat = () => {
       Alert.alert('Error', 'Failed to start speech recognition')
       setIsListening(false)
     }
-  }
+  }, [isListening])
   useEffect(() => {
     Tts.setDefaultLanguage('en-US')
     Tts.setDefaultPitch(1.0)
@@ -61,13 +68,15 @@ const Chat = () => {
       Tts.removeAllListeners('tts-finish')
       Tts.removeAllListeners('tts-cancel')
     }
-  }, [])
+  }, [isAsking, speechToText])
 
   useEffect(() => {
     Voice.onSpeechStart = () => setIsListening(true)
     Voice.onSpeechEnd = () => setIsListening(false)
     Voice.onSpeechResults = event => {
       if (event.value && event.value.length > 0) {
+        // Reset retry counter on successful speech recognition
+        retryCountRef.current = 0
         setRecognizedText(event.value[0])
         if (submitAnswerRef.current) {
           submitAnswerRef.current(event.value[0])
@@ -77,19 +86,42 @@ const Chat = () => {
     Voice.onSpeechError = error => {
       console.error('Speech recognition error:', error)
       setIsListening(false)
+
+      if (
+        error.error?.code === '5' ||
+        error.error?.code === '7' ||
+        error.error?.code === '11'
+      ) {
+        // Increment retry counter
+        retryCountRef.current += 1
+        
+        // Only retry if we haven't exceeded maximum retries (5)
+        if (retryCountRef.current <= 5) {
+          console.log(`Retry attempt ${retryCountRef.current} of 5`)
+          setRecognizedText(`Retry attempt ${retryCountRef.current} of 5...`)
+          
+          setTimeout(() => {
+            speechToText()
+          }, 500)
+        } else {
+          // Reset counter and show message that we've stopped retrying
+          retryCountRef.current = 0
+          setRecognizedText('Too many recognition errors. Please try again manually.')
+        }
+      }
     }
     return () => {
       Voice.destroy().then(Voice.removeAllListeners)
     }
-  }, [])
+  }, [speechToText])
 
   useEffect(() => {
     if (messages[0]) {
       setIsAsking(true)
       Tts.speak(messages[0].message)
     }
-  }, [])
-  function getPrompt(prompt, question, answer) {
+  }, [messages])
+  function getPrompt(prompt: string, question: string, answer: string): string {
     return prompt.replace('{question}', question).replace('{answer}', answer)
   }
   const submitAnswer = useCallback(
@@ -97,8 +129,8 @@ const Chat = () => {
       if (submitting) return
       if (!initialParams) return
       const prompt = getPrompt(
-        initialParams.question_prompt,
-        initialParams.question,
+        initialParams.question_prompt || '',
+        initialParams.question || '',
         answer
       )
       const params = {
@@ -111,7 +143,7 @@ const Chat = () => {
       }
       dispatch(updateMessages({role: 'user', message: answer}))
       scrollRef?.current?.scrollToEnd({animated: true})
-      const onSuccess = res => {
+      const onSuccess = (res: any) => {
         Voice.stop()
         if (res.data.valid_answer) {
           dispatch(setInitialParams(res.data?.next_question_data))
@@ -136,14 +168,13 @@ const Chat = () => {
         setSubmitting(false)
       })
     },
-    [initialParams, userData, conversationId]
+    [initialParams, userData, conversationId, dispatch, submitting]
   )
 
   useEffect(() => {
     submitAnswerRef.current = submitAnswer
   }, [submitAnswer])
 
-  const navigation = useNavigation()
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
@@ -151,7 +182,7 @@ const Chat = () => {
         ref={scrollRef}
         data={messages}
         style={styles.list}
-        keyExtractor={(item, index) => `message-${index}`}
+        keyExtractor={(_, index) => `message-${index}`}
         renderItem={({item}) => {
           const isSystem = item?.role === 'system'
           return (
