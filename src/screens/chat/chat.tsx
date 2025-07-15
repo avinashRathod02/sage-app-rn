@@ -34,7 +34,7 @@ const Chat = () => {
   const [isAsking, setIsAsking] = useState(false)
   const [recognizedText, setRecognizedText] = useState('')
 
-  const speechToText = useCallback(async () => {
+  const speechToText = async () => {
     try {
       if (isListening) {
         await Voice.stop()
@@ -43,14 +43,17 @@ const Chat = () => {
         // Reset retry counter when manually starting speech recognition
         retryCountRef.current = 0
         setRecognizedText('')
-        await Voice.start('en-US')
+        if(!_isSpeaking) {
+          await Voice.start('en-US')
+
+        }
       }
     } catch (error) {
       console.error('Voice start error:', error)
       Alert.alert('Error', 'Failed to start speech recognition')
       setIsListening(false)
     }
-  }, [isListening])
+  }
   useEffect(() => {
     Tts.setDefaultLanguage('en-US')
     Tts.setDefaultPitch(1.0)
@@ -68,14 +71,13 @@ const Chat = () => {
       Tts.removeAllListeners('tts-finish')
       Tts.removeAllListeners('tts-cancel')
     }
-  }, [isAsking, speechToText])
+  }, [])
 
   useEffect(() => {
     Voice.onSpeechStart = () => setIsListening(true)
     Voice.onSpeechEnd = () => setIsListening(false)
     Voice.onSpeechResults = event => {
       if (event.value && event.value.length > 0) {
-        // Reset retry counter on successful speech recognition
         retryCountRef.current = 0
         setRecognizedText(event.value[0])
         if (submitAnswerRef.current) {
@@ -86,18 +88,13 @@ const Chat = () => {
     Voice.onSpeechError = error => {
       console.error('Speech recognition error:', error)
       setIsListening(false)
-
       if (
-        error.error?.code === '5' ||
-        error.error?.code === '7' ||
-        error.error?.code === '11'
+        error.error?.code == '5' ||
+        error.error?.code == '7' 
       ) {
-        // Increment retry counter
         retryCountRef.current += 1
         
-        // Only retry if we haven't exceeded maximum retries (5)
         if (retryCountRef.current <= 5) {
-          console.log(`Retry attempt ${retryCountRef.current} of 5`)
           setRecognizedText(`Retry attempt ${retryCountRef.current} of 5...`)
           
           setTimeout(() => {
@@ -113,14 +110,14 @@ const Chat = () => {
     return () => {
       Voice.destroy().then(Voice.removeAllListeners)
     }
-  }, [speechToText])
+  }, [])
 
   useEffect(() => {
     if (messages[0]) {
       setIsAsking(true)
       Tts.speak(messages[0].message)
     }
-  }, [messages])
+  }, [])
   function getPrompt(prompt: string, question: string, answer: string): string {
     return prompt.replace('{question}', question).replace('{answer}', answer)
   }
@@ -160,6 +157,7 @@ const Chat = () => {
             updateMessages({role: 'system', message: res.data?.explanation})
           )
           scrollRef?.current?.scrollToEnd({animated: true})
+          setIsAsking(true)
           Tts.speak(res.data?.explanation)
         }
       }
@@ -168,7 +166,7 @@ const Chat = () => {
         setSubmitting(false)
       })
     },
-    [initialParams, userData, conversationId, dispatch, submitting]
+    [initialParams, userData, conversationId]
   )
 
   useEffect(() => {
