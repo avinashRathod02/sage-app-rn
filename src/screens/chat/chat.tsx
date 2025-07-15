@@ -228,7 +228,6 @@ const Chat = () => {
 const styles = StyleSheet.create({
   list: {
     maxHeight: '75%',
-    borderWidth: 1,
     width: '100%',
     marginTop: 40
   },

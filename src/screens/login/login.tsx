@@ -35,7 +35,7 @@ const Login = () => {
       <NurseView />
       <View
         style={styles.card}
-        className="w-11/12 bg-white rounded-3xl py-12 items-center justify-center border border-gray-200">
+        className="w-11/12 px-4 bg-white rounded-3xl py-12 items-center justify-center border border-gray-200">
         <Text
           className="font-bold text-2xl text-gray-700 mb-6"
           text="Login to Get Started"
