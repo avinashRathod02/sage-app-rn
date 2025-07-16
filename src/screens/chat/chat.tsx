@@ -33,16 +33,18 @@ const Chat = () => {
   const [isAsking, setIsAsking] = useState(false)
   const [recognizedText, setRecognizedText] = useState('')
 
-  const speechToText = async () => {
+  const speechToText = async (src) => {
+    console.log('api called', src, isListening, _isSpeaking);
     try {
       if (isListening) {
-        await Voice.stop()
+        await Voice.destroy()
         setIsListening(false)
       } else {
         // Reset retry counter when manually starting speech recognition
         retryCountRef.current = 0
         setRecognizedText('')
         if (!_isSpeaking) {
+          setIsListening(true)
           await Voice.start('en-US')
         }
       }
@@ -55,26 +57,29 @@ const Chat = () => {
   useEffect(() => {
     Tts.setDefaultLanguage('en-US')
     Tts.setDefaultPitch(1.0)
-    Tts.addEventListener('tts-start', () => setIsSpeaking(true))
     Tts.addEventListener('tts-finish', () => {
+      console.log('tts-finish');
       setIsSpeaking(false)
       if (isAsking) {
         setIsAsking(false)
       }
-      speechToText()
+      setTimeout(() => {
+        speechToText(3)
+      }, 500)
     })
-    Tts.addEventListener('tts-cancel', () => setIsSpeaking(false))
     return () => {
-      Tts.removeAllListeners('tts-start')
-      Tts.removeAllListeners('tts-finish')
-      Tts.removeAllListeners('tts-cancel')
-    }
+      Tts.removeAllListeners('tts-finish')}
   }, [])
 
   useEffect(() => {
-    Voice.onSpeechStart = () => setIsListening(true)
-    Voice.onSpeechEnd = () => setIsListening(false)
-    Voice.onSpeechResults = event => {
+    Voice.onSpeechEnd = () => {
+      setIsListening(false)      
+    }
+    Voice.onSpeechRecognized = event => {
+      console.log('Speech recognized:', event);
+      
+    }
+    Voice.onSpeechResults = event => {      
       if (event.value && event.value.length > 0) {
         retryCountRef.current = 0
         setRecognizedText(event.value[0])
@@ -84,16 +89,16 @@ const Chat = () => {
       }
     }
     Voice.onSpeechError = error => {
-      console.error('Speech recognition error:', error)
+      console.log('Speech recognition error:', error.error?.code)
       setIsListening(false)
-      if (error.error?.code == '5' || error.error?.code == '7') {
+      if (error.error?.code == '11' || error.error?.code == '7') {
         retryCountRef.current += 1
 
         if (retryCountRef.current <= 5) {
           setRecognizedText(`Retry attempt ${retryCountRef.current} of 5...`)
 
           setTimeout(() => {
-            speechToText()
+            speechToText(8)
           }, 500)
         } else {
           // Reset counter and show message that we've stopped retrying
@@ -112,6 +117,7 @@ const Chat = () => {
   useEffect(() => {
     if (messages[0]) {
       setIsAsking(true)
+      setIsSpeaking(true)
       Tts.speak(messages[0].message)
     }
   }, [])
@@ -138,7 +144,8 @@ const Chat = () => {
       dispatch(updateMessages({role: 'user', message: answer}))
       scrollRef?.current?.scrollToEnd({animated: true})
       const onSuccess = (res: any) => {
-        Voice.stop()
+        Voice.destroy()
+        setIsListening(false)
         if (res.data.valid_answer) {
           dispatch(setInitialParams(res.data?.next_question_data))
           dispatch(setUserData(res.data?.user_data))
@@ -147,6 +154,7 @@ const Chat = () => {
           scrollRef?.current?.scrollToEnd({animated: true})
 
           setIsAsking(true)
+          setIsSpeaking(true)
           Tts.speak(newQuestion)
         } else {
           dispatch(setUserData(res?.data?.user_data))
@@ -155,6 +163,7 @@ const Chat = () => {
           )
           scrollRef?.current?.scrollToEnd({animated: true})
           setIsAsking(true)
+          setIsSpeaking(true)
           Tts.speak(res.data?.explanation)
         }
       }
@@ -207,7 +216,7 @@ const Chat = () => {
         }}
       />
       <ButtonView
-        onPress={speechToText}
+        onPress={() => speechToText(2)}
         className="rounded-full mb-2 overflow-hidden">
         <BaseImage
           name={isListening ? 'wave_animated' : 'wave'}
