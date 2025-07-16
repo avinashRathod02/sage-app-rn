@@ -110,10 +110,10 @@ const Chat = () => {
   }, [])
 
   useEffect(() => {
-    // if (messages[0]) {
-    //   setIsAsking(true)
-    //   Tts.speak(messages[0].message)
-    // }
+    if (messages[0]) {
+      setIsAsking(true)
+      Tts.speak(messages[0].message)
+    }
   }, [])
   function getPrompt(prompt: string, question: string, answer: string): string {
     return prompt.replace('{question}', question).replace('{answer}', answer)
@@ -171,8 +171,8 @@ const Chat = () => {
   }, [submitAnswer])
 
   return (
-    <View className="flex-1 items-center justify-around bg-white">
-      <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
+    <View className="flex-1 items-center bg-white">
+      <BaseImage type="Image" className="h-full w-full absolute" style={{transform:[{scale:1.2}]}} name="BG" />
       <Header title={initialParams.category ?? 'Patient Demographic'} />
       <FlatList
         ref={scrollRef}
@@ -208,7 +208,7 @@ const Chat = () => {
       />
       <ButtonView
         onPress={speechToText}
-        className="rounded-full mb-8 overflow-hidden">
+        className="rounded-full mb-2 overflow-hidden">
         <BaseImage
           name={isListening ? 'wave_animated' : 'wave'}
           style={{width: 80, height: 80}}
@@ -216,11 +216,11 @@ const Chat = () => {
       </ButtonView>
       <Text
         text={recognizedText}
-        className="self-center text-gray-600 absolute bottom-6"
+        className="self-center text-gray-600"
       />
       <Text
         text={!isListening ? ' ' : 'Listening...'}
-        className="self-center font-bold text-gray-600 absolute bottom-8 text-lg"
+        className="self-center font-bold text-gray-600 text-lg mb-10"
       />
     </View>
   )

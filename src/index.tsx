@@ -8,7 +8,7 @@ import {PersistGate} from 'redux-persist/integration/react'
 import "./theme/global.css"
 
 /**
- *
+ * Sage Medical AI
  * Main app
  * @format
  * @flow
