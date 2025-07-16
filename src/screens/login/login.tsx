@@ -1,5 +1,5 @@
 import {StyleSheet, View} from 'react-native'
-import {BaseButton, BaseImage, BaseInput, Text} from 'components'
+import {AssetSvg, BaseImage, BaseInput, ButtonView, Text} from 'components'
 import {useNavigation} from '@react-navigation/native'
 import {routes} from 'navigation'
 import {useState} from 'react'
@@ -12,16 +12,18 @@ import {
 } from 'store/common/slice'
 import {RootState} from 'store'
 import {NurseView} from 'components/common'
+import {Header} from 'components/header'
+import LinearGradient from 'react-native-linear-gradient'
 
 const Login = () => {
   const dispatch = useDispatch()
   const {conversationId} = useSelector((state: RootState) => state.common)
   const navigation = useNavigation()
-  const [email, setEmail] = useState(conversationId ?? '')
+  const [patientId, setPatientId] = useState(conversationId ?? '')
   const [password, setPassword] = useState('')
   const login = () => {
-    if (email !== conversationId) {
-      dispatch(setConversationId(email))
+    if (patientId !== conversationId) {
+      dispatch(setConversationId(patientId))
       dispatch(setUserData(null))
       dispatch(setInitialParams(null))
       dispatch(setMessages([]))
@@ -30,8 +32,9 @@ const Login = () => {
     navigation.navigate(routes.WELCOME)
   }
   return (
-    <View className="flex-1 items-center justify-center bg-white">
+    <View className="flex-1 items-center bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
+      <Header title="Welcome to Gentle Hearts Family Clinic!" />
       <NurseView />
       <View
         style={styles.card}
@@ -40,7 +43,11 @@ const Login = () => {
           className="font-bold text-2xl text-gray-700 mb-6"
           text="Login to Get Started"
         />
-        <BaseInput value={email} label="Email" onChangeText={setEmail} />
+        <BaseInput
+          value={patientId}
+          label="Patient id"
+          onChangeText={setPatientId}
+        />
         <BaseInput
           value={password}
           label="Password"
@@ -48,12 +55,29 @@ const Login = () => {
           onChangeText={setPassword}
         />
       </View>
-      <BaseButton title="Login" onPress={login} />
+      <ButtonView style={styles.button} onPress={login}>
+        <LinearGradient
+          colors={['#1988C5', '#28DDCA']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={styles.gradientBackground}>
+          <AssetSvg name="login" size={35} color="white" />
+        </LinearGradient>
+      </ButtonView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  button: {
+    marginTop: 50,
+    height: 90,
+    width: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
+    overflow: 'hidden'
+  },
   card: {
     shadowColor: '#000',
     shadowOffset: {
@@ -63,6 +87,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 5
+  },
+  gradientBackground: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 })
 export default Login

@@ -1,4 +1,4 @@
-import {View} from 'react-native'
+import {View, Text as RNText} from 'react-native'
 import {BaseImage, ButtonView, Text} from 'components'
 import {useNavigation} from '@react-navigation/native'
 import {routes} from 'navigation'
@@ -62,15 +62,36 @@ const Welcome = () => {
     Tts.stop()
     navigation.navigate(routes.CHAT)
   }
+
+  // Function to render text with blue brackets
+  const renderMessageWithBlueText = (text: string) => {
+    if (!text) return null
+    
+    const parts = text.split(/(\[.*?\])/)
+    
+    return (
+      <RNText className="text-center text-gray-700 font-bold text-2xl">
+        {parts.map((part, index) => {
+          if (part.startsWith('[') && part.endsWith(']')) {
+            // Remove brackets and make text blue
+            const textWithoutBrackets = part.slice(1, -1)
+            return (
+              <RNText key={index} style={{color: '#3B82F6'}}>
+                {textWithoutBrackets}
+              </RNText>
+            )
+          }
+          return part
+        })}
+      </RNText>
+    )
+  }
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
       <NurseView />
       <View className="w-full max-h-80 items-center py-4 px-8">
-        <Text
-          className="text-center text-gray-700 font-bold text-2xl"
-          text={message}
-        />
+        {renderMessageWithBlueText(message)}
       </View>
       <ButtonView onPress={start} className="mt-4 rounded-full overflow-hidden">
         <BaseImage name="wave_animated" style={{width: 100, height: 100}} />

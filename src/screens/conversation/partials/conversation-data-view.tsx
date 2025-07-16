@@ -1,32 +1,59 @@
-import { BaseInput, BasePicker } from 'components';
-import BaseDatePicker from 'components/base/base-date-picker/base-date-picker';
+import {BaseInput, BasePicker} from 'components'
+import BaseDatePicker from 'components/base/base-date-picker/base-date-picker'
 import {View, Text, StyleSheet} from 'react-native'
 
 export const GENDER_OPTIONS = [
   {name: 'Male', value: 'male'},
   {name: 'Female', value: 'female'},
-  {name: 'Other', value: 'other'},
-];
+  {name: 'Other', value: 'other'}
+]
 
-export default ({conversation = []
-}) => {
+export default ({conversation = []}) => {
   if (!conversation.length) return
   return (
-    <View style={styles.container} className='flex-1 p-4 bg-white rounded-md mt-2 mb-12 mx-3'>
+    <View
+      style={styles.container}
+      className="flex-1 p-4 bg-white rounded-md mt-2 mb-12 mx-3">
       {conversation.map((item, index) => {
-        if(item.type === "textfield") {
-        return <BaseInput label={item.question_title} value={item?.extracted_answer} key={index} />
+        if (item.type === 'textfield') {
+          return (
+            <BaseInput
+              label={item.question_title}
+              value={item?.extracted_answer}
+              key={index}
+            />
+          )
         }
-        if(item.type === "textarea") {
-        return <BaseInput multiline style={{ height: 100 }} label={item.question_title} value={item?.extracted_answer} key={index} />
+        if (item.type === 'textarea') {
+          return (
+            <BaseInput
+              multiline
+              style={{height: 100}}
+              label={item.question_title}
+              value={item?.extracted_answer}
+              key={index}
+            />
+          )
         }
-        if(item.type === "date") {
-        return <BaseDatePicker label={item.question_title} value={item?.extracted_answer} key={index} />
+        if (item.type === 'date') {
+          return (
+            <BaseDatePicker
+              label={item.question_title}
+              value={item?.extracted_answer}
+              key={index}
+            />
+          )
         }
-        if(item.type === "dropdown" &&item.question_title=== 'Gender') {
-        return <BasePicker label={item.question_title} value={item?.extracted_answer} key={index} 
-        // setValue={setCarVariant}
-        items={GENDER_OPTIONS}/>
+        if (item.type === 'dropdown' && item.question_title === 'Gender') {
+          return (
+            <BasePicker
+              label={item.question_title}
+              value={item?.extracted_answer}
+              key={index}
+              // setValue={setCarVariant}
+              items={GENDER_OPTIONS}
+            />
+          )
         }
         return <ConversationItem key={index} item={item} />
       })}
@@ -59,10 +86,10 @@ export const ConversationItem = ({item}) => {
 }
 
 const styles = StyleSheet.create({
-  container:{
-    width:'95%',
+  container: {
+    width: '95%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,

@@ -73,7 +73,9 @@ export const BaseButton = (props: IBaseButton) => {
         onPress={onPress}
         style={mainButtonStyle}>
         <LinearGradient
-          colors={isPrimary ? ['#1988C5', '#28DDCA'] : [colors.white, colors.white]}
+          colors={
+            isPrimary ? ['#1988C5', '#28DDCA'] : [colors.white, colors.white]
+          }
           start={{x: 0, y: 0}}
           end={{x: 1, y: 0}}
           style={styles.gradientBackground}>
@@ -86,11 +88,12 @@ export const BaseButton = (props: IBaseButton) => {
             style={[styles.title, {color: textColor}, titleStyle]}
             txOptions={txOptions}
             tx={tx}
-            text={typeof title === 'string' ? title : undefined}
-          >
+            text={typeof title === 'string' ? title : undefined}>
             {typeof title !== 'string' ? title : null}
           </Text>
-          {loading ? <ActivityIndicator size="small" color={textColor} /> : null}
+          {loading ? (
+            <ActivityIndicator size="small" color={textColor} />
+          ) : null}
         </LinearGradient>
       </ButtonView>
     </View>
@@ -105,8 +108,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   button: {
-    height: 55,
-    width: '90%',
+    height: 45,
+    width: '100%',
     alignSelf: 'center',
     borderRadius: 1000,
     overflow: 'hidden'

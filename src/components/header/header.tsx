@@ -1,14 +1,21 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { BaseButton } from 'components/base'
+import {StyleSheet, View} from 'react-native'
+import {BaseButton} from 'components/base'
 
-export default (props) => {
-     const { title } = props
+export const Header = props => {
+  const {title} = props
   return (
-    <View>
-     <BaseButton title={title} />
+    <View className="mt-14 flex-row items-center justify-between">
+      <View style={styles.line} />
+      <BaseButton scale={1} style={{width: 'auto'}} title={title} />
+      <View style={styles.line} />
     </View>
   )
 }
 
- 
+const styles = StyleSheet.create({
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#BADDF0'
+  }
+})
