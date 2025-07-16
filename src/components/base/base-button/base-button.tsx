@@ -16,6 +16,7 @@ import {
 import colors from 'theme'
 import {ReactNode} from 'react'
 import {SCREEN_WIDTH} from 'utils/size'
+import LinearGradient from 'react-native-linear-gradient'
 
 export interface IBaseButton extends IButtonViewProps {
   icon?: SvgType
@@ -37,7 +38,7 @@ export const BaseButton = (props: IBaseButton) => {
     loading,
     icon,
     type = 'primary',
-    color = colors.blue,
+    color = 'transparent',
     title,
     onPress,
     disabled,
@@ -71,18 +72,26 @@ export const BaseButton = (props: IBaseButton) => {
         loading={loading}
         onPress={onPress}
         style={mainButtonStyle}>
-        {icon && !loading && (
-          <AssetSvg name={icon} size={24} color={textColor} />
-        )}
-        <Text
-          hide={loading}
-          font="semiBold"
-          style={[styles.title, {color: textColor}, titleStyle]}
-          txOptions={txOptions}
-          tx={tx}
-          text={title}
-        />
-        {loading ? <ActivityIndicator size="small" color={textColor} /> : null}
+        <LinearGradient
+          colors={isPrimary ? ['#1988C5', '#28DDCA'] : [colors.white, colors.white]}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+          style={styles.gradientBackground}>
+          {icon && !loading && (
+            <AssetSvg name={icon} size={24} color={textColor} />
+          )}
+          <Text
+            hide={loading}
+            font="semiBold"
+            style={[styles.title, {color: textColor}, titleStyle]}
+            txOptions={txOptions}
+            tx={tx}
+            text={typeof title === 'string' ? title : undefined}
+          >
+            {typeof title !== 'string' ? title : null}
+          </Text>
+          {loading ? <ActivityIndicator size="small" color={textColor} /> : null}
+        </LinearGradient>
       </ButtonView>
     </View>
   )
@@ -91,17 +100,20 @@ export const BaseButton = (props: IBaseButton) => {
 const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH * 0.9,
-    paddingVertical: 16,
+    marginTop: 10,
+    marginBottom: 10,
     alignSelf: 'center'
   },
   button: {
-    minHeight: 48,
+    height: 55,
     width: '90%',
     alignSelf: 'center',
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-    borderWidth: 1,
-    borderColor: colors.primary,
+    borderRadius: 1000,
+    overflow: 'hidden'
+  },
+  gradientBackground: {
+    width: '100%',
+    height: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center'
