@@ -1,77 +1,94 @@
-import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, SafeAreaView } from 'react-native';
-import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  SafeAreaView
+} from 'react-native'
+import {useState} from 'react'
+import {AssetSvg} from 'components/asset-svg'
 
 interface PickerItem {
-  name: string;
-  value: string | number;
+  name: string
+  value: string | number
 }
 
 interface BasePickerProps {
-  label?: string;
-  value: string | number;
-  setValue: (value: string | number) => void;
-  placeholder?: string;
-  items: PickerItem[];
+  label?: string
+  value: string | number
+  setValue: (value: string | number) => void
+  placeholder?: string
+  items: PickerItem[]
 }
 
-export const BasePicker = ({ label, value, setValue, placeholder, items = [] }: BasePickerProps) => {
-  const [modalVisible, setModalVisible] = useState(false);
-  
+export const BasePicker = ({
+  label,
+  value,
+  setValue,
+  placeholder,
+  items = []
+}: BasePickerProps) => {
+  const [modalVisible, setModalVisible] = useState(false)
+
   // Find the selected item name to display
-  const selectedItem = items.find(item => item.value === value);
-  const displayText = selectedItem 
-    ? selectedItem.name 
-    : (placeholder || 'Select an option');
+  const selectedItem = items.find(item => item.value === value)
+  const displayText = selectedItem
+    ? selectedItem.name
+    : placeholder || 'Select an option'
 
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TouchableOpacity 
-        style={styles.pickerButton} 
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={[
-          styles.pickerButtonText, 
-          !selectedItem && placeholder ? styles.placeholderText : null
-        ]}>
+      <TouchableOpacity
+        style={styles.pickerButton}
+        onPress={() => setModalVisible(true)}>
+        <Text
+          style={[
+            styles.pickerButtonText,
+            !selectedItem && placeholder ? styles.placeholderText : null
+          ]}>
           {displayText}
         </Text>
+        <AssetSvg name="down" />
       </TouchableOpacity>
 
       <Modal
         visible={modalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
+        onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label || 'Select an option'}</Text>
+              <Text style={styles.modalTitle}>
+                {label || 'Select an option'}
+              </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Text style={styles.closeButton}>Close</Text>
               </TouchableOpacity>
             </View>
-            
+
             <FlatList
               data={items}
               style={{paddingBottom: 20}}
               keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <TouchableOpacity
                   style={[
                     styles.optionItem,
                     item.value === value && styles.selectedOption
                   ]}
                   onPress={() => {
-                    setValue(item.value);
-                    setModalVisible(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.optionText,
-                    item.value === value && styles.selectedOptionText
-                  ]}>
+                    setValue(item.value)
+                    setModalVisible(false)
+                  }}>
+                  <Text
+                    style={[
+                      styles.optionText,
+                      item.value === value && styles.selectedOptionText
+                    ]}>
                     {item.name}
                   </Text>
                 </TouchableOpacity>
@@ -81,44 +98,47 @@ export const BasePicker = ({ label, value, setValue, placeholder, items = [] }: 
         </View>
       </Modal>
     </View>
-  );
-};
+  )
+}
 
-export default BasePicker;
+export default BasePicker
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: 10
   },
   label: {
     fontSize: 16,
     marginBottom: 4,
-    color: '#333',
+    color: '#333'
   },
   pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff'
   },
   pickerButtonText: {
     fontSize: 16,
-    color: '#333',
+    color: '#333'
   },
   placeholderText: {
-    color: '#999',
+    color: '#999'
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)'
   },
   modalContent: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
-    maxHeight: '70%',
+    maxHeight: '70%'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -126,32 +146,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#eee'
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#333'
   },
   closeButton: {
     fontSize: 16,
     color: '#007bff',
-    fontWeight: '600',
+    fontWeight: '600'
   },
   optionItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#eee'
   },
   selectedOption: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: '#f0f8ff'
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#333'
   },
   selectedOptionText: {
     fontWeight: 'bold',
-    color: '#007bff',
-  },
-});
+    color: '#007bff'
+  }
+})

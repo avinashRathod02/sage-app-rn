@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import moment from 'moment'
+import {AssetSvg} from 'components/asset-svg'
 
 interface BaseDatePickerProps {
   value: Date | null | undefined
@@ -63,6 +64,7 @@ const BaseDatePicker: React.FC<BaseDatePickerProps> = ({
           style={[styles.inputText, !formattedValue && styles.placeholderText]}>
           {formattedValue || placeholder}
         </Text>
+        <AssetSvg name="date" />
       </TouchableOpacity>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -116,12 +118,14 @@ const styles = StyleSheet.create({
     color: '#333'
   },
   inputField: {
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 46,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     paddingHorizontal: 12,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#fff'
   },
   inputText: {

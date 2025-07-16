@@ -1,15 +1,25 @@
 import {BaseInput, BasePicker} from 'components'
 import BaseDatePicker from 'components/base/base-date-picker/base-date-picker'
 import {View, Text, StyleSheet} from 'react-native'
-import {GENDER_OPTIONS} from 'store/common/helper'
+import {
+  ETHNICITY_OPTIONS,
+  GENDER_OPTIONS,
+  MARITAL_STATUS_OPTIONS
+} from 'store/common/helper'
 
 export default ({conversation = []}) => {
   if (!conversation.length) return
+  const uniqueConversation = conversation.filter((item, index, array) => {
+    const lastIndex = array
+      .map(obj => obj.question_title)
+      .lastIndexOf(item.question_title)
+    return index === lastIndex
+  })
   return (
     <View
       style={styles.container}
       className="flex-1 p-4 bg-white rounded-md mt-2 mb-12 mx-3">
-      {conversation.map((item, index) => {
+      {uniqueConversation.map((item, index) => {
         if (item.type === 'textfield') {
           return (
             <BaseInput
@@ -39,7 +49,8 @@ export default ({conversation = []}) => {
             />
           )
         }
-        if (item.type === 'dropdown' && item.question_title === 'Gender') {
+        if (item.type === 'dropdown') {
+          const items = getItemsList(item.question_title)
           return (
             <BasePicker
               label={item.question_title}
@@ -56,6 +67,18 @@ export default ({conversation = []}) => {
   )
 }
 
+const getItemsList = (key: string) => {
+  switch (key) {
+    case 'gender':
+      return GENDER_OPTIONS
+    case 'Ethnicity/Race':
+      return ETHNICITY_OPTIONS
+    case 'Marital Status':
+      return MARITAL_STATUS_OPTIONS
+    default:
+      return []
+  }
+}
 export const ConversationItem = ({item}) => {
   if (item?.sub_category_data) {
     return (

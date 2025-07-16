@@ -60,7 +60,7 @@ export const PatientDataEdit = () => {
       <KeyboardAvoidingView
         contentContainerStyle={{flex: 1, width: '100%', alignItems: 'center'}}
         style={{width: '100%', flex: 1}}
-        behavior="position">
+        behavior="padding">
         <ScrollView style={{width: '100%'}}>
           <ConversationDataView {...props} />
           <InsuranceView {...props} />
