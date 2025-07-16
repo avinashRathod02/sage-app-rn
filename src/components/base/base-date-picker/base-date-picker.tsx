@@ -1,10 +1,17 @@
 import {useState} from 'react'
-import {Platform, View, Text, Modal, StyleSheet, TouchableOpacity} from 'react-native'
+import {
+  Platform,
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  TouchableOpacity
+} from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import moment from 'moment'
 
 interface BaseDatePickerProps {
-  value: any
+  value: Date | null | undefined
   label?: string
   setValue: (date: Date) => void
   placeholder?: string
@@ -33,32 +40,32 @@ const BaseDatePicker: React.FC<BaseDatePickerProps> = ({
     }
   }
 
+  // Convert value to Date if needed, or use current date as fallback
+  const getDateValue = () => {
+    if (!value) return new Date()
+    if (value instanceof Date) return value
+    // If value is a string or moment object, convert to Date
+    return moment(value).toDate()
+  }
+
   // Only format if value exists to avoid "Invalid date" issues
   const formattedValue = value ? moment(value).format('YYYY-MM-DD') : ''
 
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      
-      <TouchableOpacity 
-        style={[
-          styles.inputField,
-          error ? styles.errorBorder : null
-        ]}
+
+      <TouchableOpacity
+        style={[styles.inputField, error ? styles.errorBorder : null]}
         onPress={() => setShow(true)}
-        activeOpacity={0.7}
-      >
-        <Text style={[
-          styles.inputText,
-          !formattedValue && styles.placeholderText
-        ]}>
+        activeOpacity={0.7}>
+        <Text
+          style={[styles.inputText, !formattedValue && styles.placeholderText]}>
           {formattedValue || placeholder}
         </Text>
       </TouchableOpacity>
-      
-      {error && (
-        <Text style={styles.errorText}>{error}</Text>
-      )}
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       {show && Platform.OS === 'ios' && (
         <Modal transparent animationType="fade">
@@ -70,9 +77,9 @@ const BaseDatePicker: React.FC<BaseDatePickerProps> = ({
                   <Text style={styles.closeButton}>Done</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <DateTimePicker
-                value={value ? moment(value).toDate() : new Date()}
+                value={getDateValue()}
                 mode={mode}
                 display="spinner"
                 onChange={onChange}
@@ -86,7 +93,7 @@ const BaseDatePicker: React.FC<BaseDatePickerProps> = ({
 
       {show && Platform.OS === 'android' && (
         <DateTimePicker
-          value={value || new Date()}
+          value={getDateValue()}
           mode={mode}
           display="default"
           onChange={onChange}
@@ -100,13 +107,13 @@ const BaseDatePicker: React.FC<BaseDatePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: 10
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
     fontWeight: '500',
-    color: '#333',
+    color: '#333'
   },
   inputField: {
     height: 46,
@@ -115,34 +122,34 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 12,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#fff'
   },
   inputText: {
     fontSize: 16,
-    color: '#333',
+    color: '#333'
   },
   placeholderText: {
-    color: '#999',
+    color: '#999'
   },
   errorBorder: {
-    borderColor: '#ff3b30',
+    borderColor: '#ff3b30'
   },
   errorText: {
     color: '#ff3b30',
     fontSize: 12,
     marginTop: 4,
-    marginLeft: 4,
+    marginLeft: 4
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)'
   },
   modalContent: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
-    paddingBottom: 20,
+    paddingBottom: 20
   },
   modalHeader: {
     flexDirection: 'row',
@@ -150,18 +157,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#eee'
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#333'
   },
   closeButton: {
     fontSize: 16,
     color: '#007bff',
-    fontWeight: '600',
-  },
-});
+    fontWeight: '600'
+  }
+})
 
 export default BaseDatePicker

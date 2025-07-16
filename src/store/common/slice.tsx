@@ -2,7 +2,7 @@ import {createSlice} from '@reduxjs/toolkit'
 import {IInitialCommonStateProps} from './types'
 
 const initialState: IInitialCommonStateProps = {
-  conversationId: '',
+  conversationId: 'CON1751881500.379857',
   initialParams: null,
   userData: null,
   categories: [],
@@ -14,7 +14,7 @@ export const commonSlice = createSlice({
   initialState,
   reducers: {
     setConversationId: (state, action) => {
-      state.conversationId = action.payload
+      // state.conversationId = action.payload
     },
     setCategories: (state, action) => {
       state.categories = action.payload

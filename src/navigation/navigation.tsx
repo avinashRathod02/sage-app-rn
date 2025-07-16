@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator()
 const MainApp = () => {
   return (
     <Stack.Navigator
-      initialRouteName={routes.CHAT}
+      initialRouteName={routes.PATIENT_DATA_EDIT}
       screenOptions={{headerShown: false}}>
       {CommonNavigator}
     </Stack.Navigator>
