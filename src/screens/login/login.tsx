@@ -1,4 +1,4 @@
-import {StyleSheet, View} from 'react-native'
+import {KeyboardAvoidingView, StyleSheet, View} from 'react-native'
 import {AssetSvg, BaseImage, BaseInput, ButtonView, Text} from 'components'
 import {useNavigation} from '@react-navigation/native'
 import {routes} from 'navigation'
@@ -24,9 +24,9 @@ const Login = () => {
   const login = () => {
     if (patientId !== conversationId) {
       dispatch(setConversationId(patientId))
-      dispatch(setUserData(null))
-      dispatch(setInitialParams(null))
-      dispatch(setMessages([]))
+      // dispatch(setUserData(null))
+      // dispatch(setInitialParams(null))
+      // dispatch(setMessages([]))
     } else {
     }
     navigation.navigate(routes.WELCOME)
@@ -34,27 +34,32 @@ const Login = () => {
   return (
     <View className="flex-1 items-center bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
-      <Header title="Welcome to Gentle Hearts Family Clinic!" />
-      <NurseView />
-      <View
-        style={styles.card}
-        className="w-11/12 px-4 bg-white rounded-3xl py-12 items-center justify-center border border-gray-200">
-        <Text
-          className="font-bold text-2xl text-gray-700 mb-6"
-          text="Login to Get Started"
-        />
-        <BaseInput
-          value={patientId}
-          label="Patient id"
-          onChangeText={setPatientId}
-        />
-        <BaseInput
-          value={password}
-          label="Password"
-          secureTextEntry
-          onChangeText={setPassword}
-        />
-      </View>
+      <KeyboardAvoidingView
+        contentContainerStyle={{width: '100%', alignItems: 'center'}}
+        style={{width: '100%'}}
+        behavior="position">
+        <Header title="Welcome to Gentle Hearts Family Clinic!" />
+        <NurseView style={{marginTop: 20, marginBottom: 40}} />
+        <View
+          style={styles.card}
+          className="w-11/12 px-4 bg-white rounded-3xl pt-8 pb-4 items-center justify-center border border-gray-200">
+          <Text
+            className="font-bold text-2xl text-gray-700 mb-10"
+            text="Login to Get Started"
+          />
+          <BaseInput
+            value={patientId}
+            label="Patient id"
+            onChangeText={setPatientId}
+          />
+          <BaseInput
+            value={password}
+            label="Password"
+            secureTextEntry
+            onChangeText={setPassword}
+          />
+        </View>
+      </KeyboardAvoidingView>
       <ButtonView style={styles.button} onPress={login}>
         <LinearGradient
           colors={['#1988C5', '#28DDCA']}
@@ -70,7 +75,7 @@ const Login = () => {
 
 const styles = StyleSheet.create({
   button: {
-    marginTop: 50,
+    marginTop: 30,
     height: 90,
     width: 90,
     alignItems: 'center',
@@ -79,6 +84,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden'
   },
   card: {
+    width: '90%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

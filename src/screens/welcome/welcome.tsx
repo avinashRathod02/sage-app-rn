@@ -66,9 +66,9 @@ const Welcome = () => {
   // Function to render text with blue brackets
   const renderMessageWithBlueText = (text: string) => {
     if (!text) return null
-    
+
     const parts = text.split(/(\[.*?\])/)
-    
+
     return (
       <RNText className="text-center text-gray-700 font-bold text-2xl">
         {parts.map((part, index) => {

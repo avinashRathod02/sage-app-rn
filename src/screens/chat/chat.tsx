@@ -1,4 +1,4 @@
-import {Alert, StyleSheet, View} from 'react-native'
+import {Alert, FlatList, StyleSheet, View} from 'react-native'
 import {BaseImage, ButtonView, Text} from 'components'
 import Tts from 'react-native-tts'
 import {useCallback, useEffect, useRef, useState} from 'react'
@@ -6,12 +6,10 @@ import {useDispatch, useSelector} from 'react-redux'
 import {RootState} from 'store'
 import {setInitialParams, updateMessages, setUserData} from 'store/common/slice'
 import {Request} from 'utils/request'
-import Animated, {
-  CurvedTransition,
-  FadeInLeft,
-  FadeInRight
-} from 'react-native-reanimated'
 import Voice from '@react-native-voice/voice'
+import {getInitials} from 'utils/helper'
+import colors from 'theme'
+import {Header} from 'components/header'
 
 // Define message type for better type checking
 interface Message {
@@ -20,7 +18,7 @@ interface Message {
 }
 
 const Chat = () => {
-  const scrollRef = useRef<Animated.FlatList<Message>>(null)
+  const scrollRef = useRef<FlatList<Message>>(null)
   const submitAnswerRef = useRef<((answer: string) => void) | null>(null)
   const retryCountRef = useRef<number>(0) // Track consecutive retries
 
@@ -28,6 +26,7 @@ const Chat = () => {
   const {messages, userData, conversationId, initialParams} = useSelector(
     (state: RootState) => state.common
   )
+  const initials = getInitials(conversationId)
   const [_isSpeaking, setIsSpeaking] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [isListening, setIsListening] = useState(false)
@@ -43,9 +42,8 @@ const Chat = () => {
         // Reset retry counter when manually starting speech recognition
         retryCountRef.current = 0
         setRecognizedText('')
-        if(!_isSpeaking) {
+        if (!_isSpeaking) {
           await Voice.start('en-US')
-
         }
       }
     } catch (error) {
@@ -88,22 +86,21 @@ const Chat = () => {
     Voice.onSpeechError = error => {
       console.error('Speech recognition error:', error)
       setIsListening(false)
-      if (
-        error.error?.code == '5' ||
-        error.error?.code == '7' 
-      ) {
+      if (error.error?.code == '5' || error.error?.code == '7') {
         retryCountRef.current += 1
-        
+
         if (retryCountRef.current <= 5) {
           setRecognizedText(`Retry attempt ${retryCountRef.current} of 5...`)
-          
+
           setTimeout(() => {
             speechToText()
           }, 500)
         } else {
           // Reset counter and show message that we've stopped retrying
           retryCountRef.current = 0
-          setRecognizedText('Too many recognition errors. Please try again manually.')
+          setRecognizedText(
+            'Too many recognition errors. Please try again manually.'
+          )
         }
       }
     }
@@ -113,10 +110,10 @@ const Chat = () => {
   }, [])
 
   useEffect(() => {
-    if (messages[0]) {
-      setIsAsking(true)
-      Tts.speak(messages[0].message)
-    }
+    // if (messages[0]) {
+    //   setIsAsking(true)
+    //   Tts.speak(messages[0].message)
+    // }
   }, [])
   function getPrompt(prompt: string, question: string, answer: string): string {
     return prompt.replace('{question}', question).replace('{answer}', answer)
@@ -176,7 +173,8 @@ const Chat = () => {
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
-      <Animated.FlatList
+      <Header title={initialParams.category ?? 'Patient Demographic'} />
+      <FlatList
         ref={scrollRef}
         data={messages}
         style={styles.list}
@@ -184,28 +182,33 @@ const Chat = () => {
         renderItem={({item}) => {
           const isSystem = item?.role === 'system'
           return (
-            <View
-              style={[styles.bubbleContainer, isSystem && styles.systemBubble]}>
-              <Animated.View
-                entering={isSystem ? FadeInLeft : FadeInRight}
-                style={[
-                  styles.bubble,
-                  !isSystem && {backgroundColor: '#b1f1fa'}
-                ]}>
-                <Animated.Text
-                  layout={CurvedTransition}
-                  style={{fontSize: 16, color: '#333'}}>
-                  {item.message}
-                </Animated.Text>
-              </Animated.View>
+            <View style={styles.messageRow}>
+              {isSystem ? (
+                // System message from left
+                <View style={styles.leftMessage}>
+                  <BaseImage name="nurse" style={styles.avatar} />
+                  <View style={styles.leftBubble}>
+                    <Text style={styles.messageText}>{item.message}</Text>
+                  </View>
+                </View>
+              ) : (
+                // User message from right
+                <View style={styles.rightMessage}>
+                  <View style={styles.rightBubble}>
+                    <Text style={styles.rightMessageText}>{item.message}</Text>
+                  </View>
+                  <View style={styles.userAvatar}>
+                    <Text text={initials} style={styles.initialsText} />
+                  </View>
+                </View>
+              )}
             </View>
           )
         }}
-        itemLayoutAnimation={CurvedTransition}
       />
       <ButtonView
         onPress={speechToText}
-        className="rounded-full mb-14 overflow-hidden">
+        className="rounded-full mb-8 overflow-hidden">
         <BaseImage
           name={isListening ? 'wave_animated' : 'wave'}
           style={{width: 80, height: 80}}
@@ -225,33 +228,68 @@ const Chat = () => {
 
 const styles = StyleSheet.create({
   list: {
-    maxHeight: '75%',
+    flex: 1,
     width: '100%',
-    marginTop: 40
+    paddingHorizontal: 16
   },
-  bubbleContainer: {
-    flexDirection: 'row',
+  messageRow: {
     width: '100%',
+    marginBottom: 16
+  },
+  leftMessage: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start'
+  },
+  rightMessage: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'flex-end'
   },
-  bubble: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
-    marginHorizontal: 20,
-    maxWidth: '70%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5
+  avatar: {
+    width: 40,
+    height: 40,
+    marginRight: 8
   },
-  systemBubble: {
-    justifyContent: 'flex-start'
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e5e5e5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8
+  },
+  leftBubble: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderTopLeftRadius: 4,
+    maxWidth: '80%'
+  },
+  rightBubble: {
+    backgroundColor: '#C1E4F8',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderTopRightRadius: 4,
+    maxWidth: '75%'
+  },
+  messageText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 20
+  },
+  rightMessageText: {
+    fontSize: 16,
+    color: colors.gray9,
+    lineHeight: 20
+  },
+  initialsText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#666'
   }
 })
 

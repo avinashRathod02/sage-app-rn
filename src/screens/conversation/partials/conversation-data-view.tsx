@@ -1,12 +1,7 @@
 import {BaseInput, BasePicker} from 'components'
 import BaseDatePicker from 'components/base/base-date-picker/base-date-picker'
 import {View, Text, StyleSheet} from 'react-native'
-
-export const GENDER_OPTIONS = [
-  {name: 'Male', value: 'male'},
-  {name: 'Female', value: 'female'},
-  {name: 'Other', value: 'other'}
-]
+import {GENDER_OPTIONS} from 'store/common/helper'
 
 export default ({conversation = []}) => {
   if (!conversation.length) return
