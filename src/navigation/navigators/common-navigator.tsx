@@ -3,7 +3,7 @@ import {routes} from '../navigation-routes'
 import {Login} from 'screens/login'
 import Welcome from '../../screens/welcome/welcome'
 import {Chat} from 'screens/chat'
-import {Conversation} from 'screens/conversation'
+import {PatientSummary} from 'screens/patient-summary'
 
 const Stack = createStackNavigator()
 
@@ -12,6 +12,6 @@ export const CommonNavigator = (
     <Stack.Screen name={routes.LOGIN} component={Login} />
     <Stack.Screen name={routes.WELCOME} component={Welcome} />
     <Stack.Screen name={routes.CHAT} component={Chat} />
-    <Stack.Screen name={routes.CONVERSATION} component={Conversation} />
+    <Stack.Screen name={routes.PATIENT_SUMMARY} component={PatientSummary} />
   </Stack.Group>
 )

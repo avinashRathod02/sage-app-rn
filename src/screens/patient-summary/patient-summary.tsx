@@ -1,5 +1,5 @@
 import {ScrollView, View} from 'react-native'
-import ConversationDataView from './partials/conversation-data-view'
+import ConversationDataView from './partials/patient-summary-view'
 import InsuranceView from './partials/insurance-view'
 import RadiologyView from './partials/radiology-view'
 import {BaseImage} from 'components'
@@ -10,7 +10,7 @@ import {RootState} from 'store'
 import {setCategories} from 'store/common/slice'
 import {Categories} from './partials/categories'
 
-export const Conversation = () => {
+export const PatientSummary = () => {
   const {conversationId} = useSelector((state: RootState) => state.common)
   const dispatch = useDispatch()
   const [category, setCategory] = useState(0)
