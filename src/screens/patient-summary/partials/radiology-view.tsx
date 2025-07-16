@@ -207,7 +207,9 @@ const RadiologyView = (props: any) => {
   )
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      className="flex-1 p-4 bg-white rounded-md mt-2 mb-12 mx-3">
       <Text style={styles.title}>Radiology Images</Text>
       <Text style={styles.subtitle}>
         Add Radiology images (minimum 1, maximum 10)
@@ -248,8 +250,13 @@ const RadiologyView = (props: any) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20
+    width: '95%',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderRadius: 10
   },
   title: {
     fontSize: 24,

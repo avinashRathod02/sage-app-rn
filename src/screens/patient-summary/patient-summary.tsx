@@ -9,10 +9,16 @@ import {useDispatch, useSelector} from 'react-redux'
 import {RootState} from 'store'
 import {setCategories} from 'store/common/slice'
 import {Categories} from './partials/categories'
+import {Header} from 'components/header'
+import {useNavigation} from '@react-navigation/native'
+import {routes} from 'navigation'
 
 export const PatientSummary = () => {
-  const {conversationId} = useSelector((state: RootState) => state.common)
+  const {conversationId, categories} = useSelector(
+    (state: RootState) => state.common
+  )
   const dispatch = useDispatch()
+  const navigate = useNavigation()
   const [category, setCategory] = useState(0)
   const [conversation, setConversation] = useState([])
   const fetchCategories = () => {
@@ -46,11 +52,24 @@ export const PatientSummary = () => {
     setCategory,
     conversation
   }
+  const currentCategory = categories?.find(cat => cat.id === category)
+  const onPressEdit = () => {
+    navigate.navigate(routes.PATIENT_DATA_EDIT, {
+      title: currentCategory?.category ?? 'Patient Demographic',
+      conversation
+    })
+  }
   return (
     <View className="flex-1 items-center justify-around bg-white">
       <BaseImage type="Image" className="w-full h-full absolute" name="BG" />
+      <Header
+        onPressEdit={onPressEdit}
+        title={'Patient Summary'}
+        showLines={false}
+        showEdit
+      />
       <Categories {...props} />
-      <ScrollView className="mt-32 w-full">
+      <ScrollView className="mt-14 w-full">
         <ConversationDataView {...props} />
         <InsuranceView {...props} />
         <RadiologyView {...props} />

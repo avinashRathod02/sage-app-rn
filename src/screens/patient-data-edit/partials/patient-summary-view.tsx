@@ -6,6 +6,7 @@ import {
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS
 } from 'store/common/helper'
+import colors from 'theme'
 
 export default ({conversation = []}) => {
   if (!conversation.length) return
@@ -125,7 +126,8 @@ const styles = StyleSheet.create({
     marginLeft: 15
   },
   subItemTitle: {
-    fontWeight: '600'
+    fontWeight: '600',
+    color: colors.primary
   },
   subItemAnswer: {
     color: '#333'
@@ -137,7 +139,8 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontWeight: 'bold',
-    fontSize: 16
+    fontSize: 16,
+    color: colors.primary
   },
   itemAnswer: {
     color: '#333',

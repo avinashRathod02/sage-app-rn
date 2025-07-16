@@ -7,7 +7,7 @@ export const Categories = props => {
   const {categories} = useSelector((state: RootState) => state.common)
   const {setCategory, category} = props
   return (
-    <View className="absolute top-12 w-full">
+    <View className="absolute top-28 w-full">
       <TabMenu
         value={category}
         setValue={setCategory}

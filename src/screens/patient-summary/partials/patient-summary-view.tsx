@@ -1,12 +1,19 @@
 import {View, Text, StyleSheet} from 'react-native'
+import colors from 'theme'
 
 export default ({conversation = []}) => {
   if (!conversation.length) return
+  const uniqueConversation = conversation.filter((item, index, array) => {
+    const lastIndex = array
+      .map(obj => obj.question_title)
+      .lastIndexOf(item.question_title)
+    return index === lastIndex
+  })
   return (
     <View
       style={styles.container}
       className="flex-1 p-4 bg-white rounded-md mt-2 mb-12 mx-3">
-      {conversation.map((item, index) => {
+      {uniqueConversation.map((item, index) => {
         return <ConversationItem key={index} item={item} />
       })}
     </View>
@@ -65,16 +72,19 @@ const styles = StyleSheet.create({
     color: '#333'
   },
   itemContainer: {
-    padding: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderWidth: 1,
     borderBottomWidth: 1,
+    marginBottom: 10,
+    borderRadius: 8,
     borderColor: '#ccc'
   },
   itemTitle: {
-    fontWeight: 'bold',
-    fontSize: 16
+    fontSize: 16,
+    color: colors.primary
   },
   itemAnswer: {
-    color: '#333',
-    marginTop: 4
+    color: '#333'
   }
 })

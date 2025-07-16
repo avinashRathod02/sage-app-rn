@@ -34,6 +34,7 @@ export const Header = (props: IProps) => {
       {showEdit && !showEdit && <View className="w-10" />}
       {showEdit && (
         <AssetSvg
+          style={{marginLeft: 10}}
           buttonViewProps={{onPress: onPressEdit}}
           name="edit"
           className="mr-5"

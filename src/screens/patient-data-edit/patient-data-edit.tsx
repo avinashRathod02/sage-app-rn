@@ -1,53 +1,64 @@
-import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet
+} from 'react-native'
 import ConversationDataView from './partials/patient-summary-view'
-import InsuranceView from './partials/insurance-view'
-import RadiologyView from './partials/radiology-view'
 import {BaseImage} from 'components'
 import {useEffect, useState} from 'react'
-import {Request} from 'utils/request'
-import {useDispatch, useSelector} from 'react-redux'
+import {useSelector} from 'react-redux'
 import {RootState} from 'store'
-import {setCategories} from 'store/common/slice'
-import {Categories} from './partials/categories'
 import {Header} from 'components/header'
 import {useRoute} from '@react-navigation/native'
+import colors from 'theme'
+import {hasObjectLength} from 'utils/condition'
 
 export const PatientDataEdit = () => {
   const params = useRoute().params
   const {conversationId} = useSelector((state: RootState) => state.common)
-  const dispatch = useDispatch()
   const [category, setCategory] = useState(0)
-  const [conversation, setConversation] = useState([])
-  const fetchCategories = () => {
-    const onSuccess = res => {
-      if (res.data?.categoryList) {
-        dispatch(setCategories(res.data?.categoryList || []))
-        setCategory(res.data?.categoryList[0]?.id)
-      }
-    }
-    Request('metadata', 'GET', {}, onSuccess, () => {})
+  const conversation = params?.conversation ?? {}
+  const [data, setData] = useState({})
+
+  const setValue = (pk_question_id: string, value: any) => {
+    setData(prevData => ({
+      ...prevData,
+      [pk_question_id]: value
+    }))
   }
   useEffect(() => {
-    if (!conversationId) return
-    fetchConversation(category)
+    const initialData = conversation ?? {}
+    setData(initialData)
+
     return () => {}
-  }, [category])
-  useEffect(() => {
-    fetchCategories()
   }, [])
 
-  const fetchConversation = (id: any) => {
-    if (!id) return
-    const onSuccess = res => {
-      setConversation([...res.data])
+  const handleSubmit = () => {
+    const onSuccess = (res: any) => {
+      console.log('Data submitted successfully:', res)
+      // Handle success (e.g., show toast, navigate back, etc.)
     }
-    const params = {conversation_id: conversationId, categories: [id]}
-    Request('conversation', 'POST', params, onSuccess, () => {})
+    const onError = (err: any) => {
+      console.error('Error submitting data:', err)
+      // Handle error
+    }
+
+    const submitParams = {
+      conversation_id: conversationId,
+      data: data
+    }
+
+    // Request('submit-patient-data', 'POST', submitParams, onSuccess, onError)
   }
+
   const props = {
     category,
     setCategory,
-    conversation
+    conversation,
+    data,
+    setValue
   }
   return (
     <View className="flex-1 items-center justify-around bg-white">
@@ -58,15 +69,33 @@ export const PatientDataEdit = () => {
         title={params?.title ?? 'Patient Demographic'}
       />
       <KeyboardAvoidingView
-        contentContainerStyle={{flex: 1, width: '100%', alignItems: 'center'}}
-        style={{width: '100%', flex: 1}}
+        contentContainerStyle={styles.container}
+        style={{width: '100%', flex: 1, height: '100%'}}
         behavior="padding">
-        <ScrollView style={{width: '100%'}}>
+        <ScrollView style={{width: '100%'}} contentContainerClassName="pb-20">
           <ConversationDataView {...props} />
-          <InsuranceView {...props} />
-          <RadiologyView {...props} />
+          {hasObjectLength(data) && (
+            <View className="w-full bottom-1 absolute">
+              <BaseImage type="Image" className="w-full " name="bottom_tab" />
+              <Text
+                onPress={handleSubmit}
+                style={{color: colors.primary}}
+                className="absolute z-20 self-center text-lg bottom-3 font-semibold">
+                Submit
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: '100%',
+    flex: 1,
+    width: '100%',
+    alignItems: 'center'
+  }
+})
