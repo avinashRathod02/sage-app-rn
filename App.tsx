@@ -46,6 +46,7 @@ function App() {
   )
   const [conversation, setConversation] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [answerSpeaking, setAnswerSpeaking] = useState(false)
   const [type, setType] = useState(1)
   const [category, setCategory] = useState(0)
   const [buttonPressed, setButtonPressed] = useState('')
@@ -67,6 +68,11 @@ function App() {
 
     Tts.addEventListener('tts-finish', () => {
       setIsSpeaking(false)
+      if (answerSpeaking) {
+        setAnswerSpeaking(false)
+        handleSpeechToText()
+        return
+      }
     })
 
     Tts.addEventListener('tts-cancel', () => {
@@ -98,6 +104,7 @@ function App() {
       console.error('Speech recognition error:', error)
       setIsListening(false)
       setButtonPressed('Speech recognition failed')
+      Voice.start('en-US') // Restart listening on error
     }
 
     return () => {
@@ -112,19 +119,25 @@ function App() {
   }, [])
 
   const handleSpeechToText = async () => {
+    console.log('handleSpeechToText called', isListening)
+
     try {
       if (isListening) {
         await Voice.stop()
         setIsListening(false)
         setButtonPressed('Stopped listening')
       } else {
+        await Voice.stop()
         setRecognizedText('')
         setButtonPressed('Starting to listen...')
-        await Voice.start('en-US')
+        setTimeout(() => {
+          Voice.start('en-US')
+        }, 500)
       }
     } catch (error) {
-      console.error('Voice start error:', error)
-      Alert.alert('Error', 'Failed to start speech recognition')
+      await Voice.start('en-US')
+      console.log('Voice start error:', error)
+
       setIsListening(false)
     }
   }
@@ -161,6 +174,7 @@ function App() {
           setUserData(res.data?.user_data)
           const newQuestion = res.data?.next_question_data?.question
           setMessages(prev => [...prev, {role: 'system', message: newQuestion}])
+          setAnswerSpeaking(true)
           Tts.speak(newQuestion)
         } else {
           setUserData(res?.data?.user_data)
@@ -202,11 +216,14 @@ function App() {
       }
       if (res.data?.question?.question) {
         setTimeout(() => {
-          Tts.speak(res.data?.question?.question)
+          setAnswerSpeaking(true)
           setMessages(prev => [
             ...prev,
             {role: 'system', message: res.data?.question?.question}
           ])
+          return setTimeout(() => {
+            Tts.speak(res.data?.question?.question)
+          }, 500)
         }, 2000)
       }
     }
